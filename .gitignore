@@ -1,0 +1,18 @@
+# Environnements virtuels Python
+venv/
+.env/
+
+# Fichiers de configuration spécifique à l'environnement
+*.pyc
+__pycache__/
+instance/
+.DS_Store
+
+# Fichiers de log
+*.log
+
+# Dossier de fichiers uploadés (pour ne pas ajouter les fichiers vidéos)
+uploads/
+
+# Clés et informations sensibles
+config.yaml
