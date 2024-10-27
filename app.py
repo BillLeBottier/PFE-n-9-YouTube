@@ -7,11 +7,11 @@ import subprocess
 
 app = Flask(__name__)
 
-# fichier stocké dans uploads
+# Fichier stocké dans uploads
 UPLOAD_FOLDER = 'uploads/'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-model = whisper.load_model("medium")  # Ou tiny, base, small, medium, large ou large-v2 selon la config du PC et des GPU 
+model = whisper.load_model("medium")  # Ou tiny, base, small, medium, large ou large-v2 selon la config du PC et des GPU
 
 # Route homepage
 @app.route('/')
@@ -21,22 +21,25 @@ def index():
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if request.method == 'POST':
-        if 'file' not in request.files:
+        if 'file' not in request.files or 'language' not in request.form or 'style' not in request.form:
             return redirect(request.url)
+        
         file = request.files['file']
+        language = request.form['language']  # Récupère la langue choisie
+        style = request.form['style']        # Récupère le style de sous-titres choisi
+
         if file.filename == '':
             return redirect(request.url)
         if file:
-            # Sécurité pour le nom du fichier
             filename = secure_filename(file.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
 
-            # génère le fichier .vtt
-            vtt_path = transcribe_video(filepath)
+            # Transcrire la vidéo en utilisant la langue choisie
+            vtt_path = transcribe_video(filepath, language)
 
-            # Ajout des sous-titres
-            subtitled_video_path = add_subtitles_to_video(filepath, vtt_path)
+            # Ajouter les sous-titres à la vidéo avec le style sélectionné
+            subtitled_video_path = add_subtitles_to_video(filepath, vtt_path, style)
 
             return redirect(url_for('download_file', filename=os.path.basename(subtitled_video_path)))
 
@@ -47,47 +50,58 @@ def upload_file():
 def download_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-def transcribe_video(filepath):
-    # Utilisation de whisper pour timestamp
-    result = model.transcribe(filepath, task="transcribe")
+def transcribe_video(filepath, language):
+    # Utilise Whisper pour transcrire la vidéo avec la langue sélectionnée
+    result = model.transcribe(filepath, task="transcribe", language=language)
 
-    # étape de création du fichier .vtt
+    # Création du fichier .vtt
     segments = result["segments"]
-    vtt_content = "WEBVTT\n\n"  # Ajoute l'en-tête VTT
+    vtt_content = "WEBVTT\n\n"
 
     for segment in segments:
-
         start = timedelta(seconds=segment["start"])
         end = timedelta(seconds=segment["end"])
-        content = segment["text"].strip()  # Retirer les espaces inutiles
+        content = segment["text"].strip()
 
-        # Formater les timestamps pour VTT
+        # Formatage des timestamps pour VTT
         start_str = f"{int(start.total_seconds() // 3600):02}:{int((start.total_seconds() % 3600) // 60):02}:{int(start.total_seconds() % 60):02}.{int(start.microseconds / 1000):03}"
         end_str = f"{int(end.total_seconds() // 3600):02}:{int((end.total_seconds() % 3600) // 60):02}:{int(end.total_seconds() % 60):02}.{int(end.microseconds / 1000):03}"
 
         vtt_content += f"{start_str} --> {end_str}\n{content}\n\n"
 
     vtt_path = filepath.rsplit('.', 1)[0] + ".vtt"
-
     with open(vtt_path, "w", encoding="utf-8-sig") as vtt_file:
         vtt_file.write(vtt_content)
 
-
     return vtt_path
 
-def add_subtitles_to_video(video_path, vtt_path):  # Modifier ici aussi
-
-    # Sortie pour la vidéo sous-titrée
+def add_subtitles_to_video(video_path, vtt_path, style):
     output_path = video_path.rsplit('.', 1)[0] + "_subtitled.mp4"
 
-    # Imprimer le chemin du fichier VTT pour débogage
-    print(f"Chemin du fichier VTT : {vtt_path}")
-    
-    # ffmpeg pour ajouter les sous-titres
+    # Définir le style de sous-titres dans FFmpeg en fonction du choix de style
+    if style == "style1":
+        subtitle_filter = f"subtitles='{vtt_path}':force_style='Fontsize=24,Fontname=Arial,Bold=1'"
+    elif style == "style2":
+        subtitle_filter = f"subtitles='{vtt_path}':force_style='Fontsize=24,Fontname=Arial,Italic=1'"
+    elif style == "style3":
+        subtitle_filter = f"subtitles='{vtt_path}':force_style='Fontsize=24,Fontname=Arial,OutlineColour=&H80000000,Outline=2'"
+    elif style == "youtube_shorts":
+        # Style de sous-titres pour YouTube Shorts
+        subtitle_filter = (
+            f"subtitles='{vtt_path}':force_style='Fontsize=28,"
+            "Fontname=Arial,Bold=1,PrimaryColour=&HFFFFFF&,"
+            "OutlineColour=&H000000&,Outline=4,Shadow=0,"
+            "Alignment=2,MarginV=30'"
+        )
+    else:
+        # Style par défaut
+        subtitle_filter = f"subtitles='{vtt_path}'"
+
+    # Commande FFmpeg pour ajouter les sous-titres avec le style choisi
     command = [
         "ffmpeg",
         "-i", video_path,
-        "-vf", f"subtitles='{vtt_path}'",
+        "-vf", subtitle_filter,
         "-c:a", "copy",
         output_path
     ]
