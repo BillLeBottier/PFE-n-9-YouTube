@@ -10,7 +10,7 @@ app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads/'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-model = whisper.load_model("tiny")
+model = whisper.load_model("medium")
 process_status = {"progress": 0}  # Variable pour le suivi du statut
 
 @app.route('/')
@@ -94,7 +94,7 @@ def add_subtitles_to_video(video_path, vtt_path, style):
             f"subtitles='{vtt_path}':force_style='Fontsize=22,"
             "Fontname=Arial,Bold=1,PrimaryColour=&HFFFFFF&,"
             "OutlineColour=&H000000&,Outline=4,Shadow=0,"
-            "Alignment=2,MarginV=30'"  # En bas, avec un espacement modéré
+            "Alignment=2,MarginV=30'"  # En bas avec un espacement modéré
         )
     elif style == "minimalist":
         subtitle_filter = (
