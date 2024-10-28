@@ -3,33 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Application de sous-titrage automatique</title>
+    <title>Sous-titrage et Chapitrage Automatique</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div class="container">
-        <h1>Sous-titrage et Chapitrage Automatique</h1>
-        <form action="/upload" method="POST" enctype="multipart/form-data">
-            <label for="file">Téléchargez votre vidéo :</label>
-            <input type="file" id="file" name="file" required>
-
-            <label for="style">Choisissez le style de sous-titres :</label>
-            <select id="style" name="style">
-                <option value="style1">Style 1</option>
-                <option value="style2">Style 2</option>
-                <option value="style3">Style 3</option>
-                <option value="youtube_shorts">YouTube Shorts</option>
-            </select>
-
-            <label for="language">Choisissez la langue :</label>
-            <select id="language" name="language">
-                <option value="fr">Français</option>
-                <option value="en">Anglais</option>
-                <option value="es">Espagnol</option>
-            </select>
-
-            <button type="submit">Envoyer</button>
-        </form>
+    <div class="header">
+        <div class="projects">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M7 4v16M17 4v16M3 8h18M3 16h18'/%3E%3C/svg%3E" alt="Projects icon">
+            Projects
+        </div>
+        <button class="start-btn" onclick="startProcess()">Start</button>
     </div>
+
+    <div class="features">
+        <div class="feature-card">
+            <div class="feature-icon">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M12 6v6m0 0v6m0-6h6m-6 0H6'/%3E%3C/svg%3E" alt="Upload icon" width="24" height="24">
+            </div>
+            <div class="feature-title">Upload Video</div>
+            <div class="feature-content">
+                <input type="file" id="fileInput" accept="video/*" onchange="handleFileSelect(event)">
+                <div id="fileName"></div>
+            </div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'/%3E%3C/svg%3E" alt="Style icon" width="24" height="24">
+            </div>
+            <div class="feature-title">Choose Subtitle Style</div>
+            <div class="feature-content">
+                <select id="styleSelect">
+                    <option value="default">Default</option>
+                    <option value="youtube_shorts">YouTube Shorts</option>
+                    <option value="minimalist">Minimalist</option>
+                    <option value="highlight">Highlight</option>
+                </select>
+            </div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129'/%3E%3C/svg%3E" alt="Language icon" width="24" height="24">
+            </div>
+            <div class="feature-title">Choose Subtitle Language</div>
+            <div class="feature-content">
+                <select id="languageSelect">
+                    <option value="fr">Français</option>
+                    <option value="en">English</option>
+                    <option value="es">Español</option>
+                    <option value="de">Deutsch</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="video-display">
+        <div class="no-video-message" id="noVideoMessage">
+            Aucune vidéo n'a été téléchargée. Utilisez le bouton "Upload a video" pour commencer.
+        </div>
+        <div class="video-info" id="videoInfo">
+            <div class="video-details">
+                <div class="video-thumbnail" id="videoThumbnail"></div>
+                <div>
+                    <h3 class="video-title" id="videoTitle">Titre de la vidéo</h3>
+                    <p class="video-duration" id="videoDuration">Durée: 00:00</p>
+                </div>
+            </div>
+            <div class="video-metadata">
+                <span class="video-dimensions" id="videoDimensions">Dimensions: --</span>
+                <span class="video-size" id="videoSize">Taille: --</span>
+                <span class="video-framerate" id="videoFramerate">Images par seconde: --</span>
+            </div>
+            <div id="progressBar"><div></div></div>
+            <div id="downloadLink" style="margin-top: 20px;"></div>
+        </div>
+    </div>
+
+    <script>
+        let selectedFile = null;
+
+        function handleFileSelect(event) {
+            selectedFile = event.target.files[0];
+            if (selectedFile) {
+                document.getElementById('fileName').textContent = `Fichier sélectionné: ${selectedFile.name}`;
+                document.getElementById('noVideoMessage').style.display = 'none';
+            }
+        }
+
+        function startProcess() {
+            if (!selectedFile) {
+                alert("Veuillez d'abord télécharger une vidéo.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            formData.append('language', document.getElementById('languageSelect').value);
+            formData.append('style', document.getElementById('styleSelect').value);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    updateVideoInfo(data.metadata);
+                    document.getElementById('downloadLink').innerHTML = `<a href="${data.video_url}" download>Télécharger la vidéo sous-titrée</a>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Une erreur est survenue lors du téléchargement.');
+            });
+
+            checkProgress();
+        }
+
+        function checkProgress() {
+            const progressBar = document.getElementById('progressBar').firstElementChild;
+            const intervalId = setInterval(() => {
+                fetch('/status')
+                    .then(response => response.json())
+                    .then(data => {
+                        progressBar.style.width = `${data.progress}%`;
+                        if (data.progress >= 100) {
+                            clearInterval(intervalId);
+                        }
+                    });
+            }, 1000);
+        }
+
+        function updateVideoInfo(metadata) {
+            document.getElementById('videoInfo').style.display = 'block';
+            document.getElementById('videoTitle').textContent = selectedFile.name;
+            document.getElementById('videoDuration').textContent = `Durée: ${metadata.duration}`;
+            document.getElementById('videoDimensions').textContent = `Dimensions: ${metadata.dimensions}`;
+            document.getElementById('videoSize').textContent = `Taille: ${metadata.size}`;
+            document.getElementById('videoFramerate').textContent = `Images par seconde: ${metadata.frame_rate}`;
+        }
+    </script>
 </body>
 </html>
