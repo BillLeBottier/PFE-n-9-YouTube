@@ -1,0 +1,5 @@
+Flask==2.3.3
+werkzeug>=2.3.7
+openai-whisper
+torch>=2.0.1
+torchaudio>=2.0.1
