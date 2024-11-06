@@ -10,7 +10,7 @@ app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads/'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-model = whisper.load_model("tiny")
+model = whisper.load_model("medium")
 process_status = {"progress": 0}  # Variable pour le suivi du statut
 
 @app.route('/')
@@ -20,13 +20,14 @@ def index():
 @app.route('/upload', methods=['POST'])
 def upload_file():
     global process_status
-    process_status["progress"] = 0  # Réinitialise le statut de progression
+    process_status["progress"] = 0
     if 'file' not in request.files or 'language' not in request.form or 'style' not in request.form:
         return jsonify({"error": "Missing parameters"}), 400
-    
+
     file = request.files['file']
     language = request.form['language']
     style = request.form['style']
+    create_chapters = request.form.get('createChapters') == 'true'  # Nouvelle option
 
     if file.filename == '':
         return jsonify({"error": "No file selected"}), 400
@@ -35,25 +36,26 @@ def upload_file():
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
 
-        # Simule la progression du traitement
-        for i in range(1, 11):  # Simulation en 10 étapes
-            time.sleep(1)  # Pause de 1 seconde pour chaque étape
-            process_status["progress"] = i * 10  # Met à jour la progression
-
-        # Transcrire et sous-titrer la vidéo
+        # Transcrire la vidéo et générer les sous-titres
         vtt_path = transcribe_video(filepath, language)
         process_status["progress"] = 70
         subtitled_video_path = add_subtitles_to_video(filepath, vtt_path, style)
         process_status["progress"] = 100
+
+        # Générer le chapitrage si sélectionné
+        chapters_text = ""
+        if create_chapters:
+            chapters_text = generate_chapters(filepath)
 
         # Obtenir les métadonnées de la vidéo traitée
         video_metadata = get_video_metadata(subtitled_video_path)
 
         return jsonify({
             "video_url": url_for('download_file', filename=os.path.basename(subtitled_video_path)),
-            "metadata": video_metadata
+            "metadata": video_metadata,
+            "chapters": chapters_text
         })
-
+    
 @app.route('/status')
 def status():
     global process_status
@@ -61,7 +63,38 @@ def status():
 
 @app.route('/download/<filename>')
 def download_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)    
+
+def generate_chapters(filepath):
+    """Génère un texte de chapitrage pour YouTube à partir des segments de transcription."""
+    result = model.transcribe(filepath)
+    segments = result["segments"]
+
+    # Format du chapitrage
+    chapters = "CHAPTERS\n\n"
+    for i, segment in enumerate(segments):
+        start = timedelta(seconds=segment["start"])
+        minutes = int(start.total_seconds() // 60)
+        seconds = int(start.total_seconds() % 60)
+        timestamp = f"{minutes:02}:{seconds:02}"
+
+        # Extrait le contenu et crée un titre
+        content = segment["text"].strip()
+        title = summarize_content(content)
+
+        # Ajoute le titre et le timestamp au texte de chapitrage
+        chapters += f"{timestamp} - {title}\n"
+
+        # Arrête après 10 chapitres pour limiter la longueur
+        if i >= 9:
+            break
+
+    return chapters
+
+def summarize_content(content):
+    """Crée un titre court basé sur le contenu de chaque segment."""
+    words = content.split()
+    return " ".join(words[:5]) + "..."  
 
 def transcribe_video(filepath, language):
     result = model.transcribe(filepath, task="transcribe", language=language)
@@ -88,13 +121,12 @@ def transcribe_video(filepath, language):
 def add_subtitles_to_video(video_path, vtt_path, style):
     output_path = video_path.rsplit('.', 1)[0] + "_subtitled.mp4"
 
-    # Styles de sous-titres pour afficher une phrase à la fois en bas
     if style == "youtube_shorts":
         subtitle_filter = (
             f"subtitles='{vtt_path}':force_style='Fontsize=22,"
             "Fontname=Arial,Bold=1,PrimaryColour=&HFFFFFF&,"
             "OutlineColour=&H000000&,Outline=4,Shadow=0,"
-            "Alignment=2,MarginV=30'"  # En bas, avec un espacement modéré
+            "Alignment=2,MarginV=30'"
         )
     elif style == "minimalist":
         subtitle_filter = (
@@ -111,10 +143,8 @@ def add_subtitles_to_video(video_path, vtt_path, style):
             "Alignment=2,MarginV=30'"
         )
     else:
-        # Style par défaut
         subtitle_filter = f"subtitles='{vtt_path}'"
 
-    # Commande FFmpeg pour ajouter les sous-titres avec le style choisi
     command = [
         "ffmpeg",
         "-i", video_path,
@@ -127,7 +157,6 @@ def add_subtitles_to_video(video_path, vtt_path, style):
     return output_path
 
 def get_video_metadata(filepath):
-    """Utilise FFmpeg pour extraire les métadonnées de la vidéo."""
     command = [
         "ffprobe",
         "-v", "error",
@@ -138,9 +167,8 @@ def get_video_metadata(filepath):
     ]
     result = subprocess.run(command, capture_output=True, text=True)
     width, height, fps, duration = result.stdout.splitlines()
-    size = round(os.path.getsize(filepath) / (1024 * 1024), 2)  # Taille en MB
+    size = round(os.path.getsize(filepath) / (1024 * 1024), 2)
 
-    # Calculer la durée en format minutes:secondes
     duration = int(float(duration))
     minutes, seconds = divmod(duration, 60)
     duration_str = f"{minutes}:{seconds:02}"
