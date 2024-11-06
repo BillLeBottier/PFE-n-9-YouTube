@@ -103,16 +103,44 @@ select, input[type="file"] {
     color: #a0a0a0;
     font-style: italic;
 }
+#progressBarContainer {
+    display: none;
+    margin-top: 20px;
+    text-align: center;
+}
 #progressBar {
     width: 100%;
     background-color: #3a3a3a;
     border-radius: 5px;
-    margin-top: 20px;
 }
-#progressBar div {
+#progressBarFill {
     height: 20px;
     background-color: #7c3aed;
     border-radius: 5px;
     width: 0%;
     transition: width 0.5s;
+}
+#progressText {
+    text-align: center;
+    color: #a0a0a0;
+    margin-top: 5px;
+}
+#chaptersSection {
+    display: none;
+    margin-top: 20px;
+}
+
+#chaptersSection h3 {
+    color: #7c3aed;
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+#chaptersText {
+    background-color: #2a2a2a;
+    padding: 10px;
+    border-radius: 5px;
+    color: #a0a0a0;
+    font-family: monospace;
+    white-space: pre-wrap; /* Préserve le formatage avec des retours à la ligne */
 }

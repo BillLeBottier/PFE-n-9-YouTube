@@ -54,6 +54,16 @@
                 </select>
             </div>
         </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M7 4v16M17 4v16M3 8h18M3 16h18'/%3E%3C/svg%3E" alt="Chapters icon" width="24" height="24">
+            </div>
+            <div class="feature-title">Create Chapters</div>
+            <div class="feature-content">
+                <input type="checkbox" id="createChapters" name="createChapters">
+                <label for="createChapters">Generate Chapters for YouTube</label>
+            </div>
+        </div>
     </div>
 
     <div class="video-display">
@@ -73,8 +83,22 @@
                 <span class="video-size" id="videoSize">Taille: --</span>
                 <span class="video-framerate" id="videoFramerate">Images par seconde: --</span>
             </div>
-            <div id="progressBar"><div></div></div>
+
+            <!-- Barre de progression -->
+            <div id="progressBarContainer">
+                <div id="progressBar">
+                    <div id="progressBarFill"></div>
+                </div>
+                <p id="progressText">0%</p>
+            </div>
+
             <div id="downloadLink" style="margin-top: 20px;"></div>
+        </div>
+
+        <!-- Section Chapitrage -->
+        <div id="chaptersSection" style="display: none; margin-top: 20px;">
+            <h3>Chapters</h3>
+            <pre id="chaptersText" style="background-color: #2a2a2a; padding: 10px; border-radius: 5px; color: #a0a0a0;"></pre>
         </div>
     </div>
 
@@ -95,10 +119,13 @@
                 return;
             }
 
+            document.getElementById("progressBarContainer").style.display = "block";
+
             const formData = new FormData();
             formData.append('file', selectedFile);
             formData.append('language', document.getElementById('languageSelect').value);
             formData.append('style', document.getElementById('styleSelect').value);
+            formData.append('createChapters', document.getElementById('createChapters').checked);
 
             fetch('/upload', {
                 method: 'POST',
@@ -111,6 +138,12 @@
                 } else {
                     updateVideoInfo(data.metadata);
                     document.getElementById('downloadLink').innerHTML = `<a href="${data.video_url}" download>Télécharger la vidéo sous-titrée</a>`;
+
+                    // Affiche le chapitrage si généré
+                    if (data.chapters) {
+                        document.getElementById('chaptersSection').style.display = 'block';
+                        document.getElementById('chaptersText').textContent = data.chapters;
+                    }
                 }
             })
             .catch(error => {
@@ -122,13 +155,18 @@
         }
 
         function checkProgress() {
-            const progressBar = document.getElementById('progressBar').firstElementChild;
+            const progressBarFill = document.getElementById("progressBarFill");
+            const progressText = document.getElementById("progressText");
+
             const intervalId = setInterval(() => {
                 fetch('/status')
                     .then(response => response.json())
                     .then(data => {
-                        progressBar.style.width = `${data.progress}%`;
-                        if (data.progress >= 100) {
+                        const progress = data.progress;
+                        progressBarFill.style.width = `${progress}%`;
+                        progressText.textContent = `${progress}%`;
+
+                        if (progress >= 100) {
                             clearInterval(intervalId);
                         }
                     });
