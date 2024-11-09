@@ -1,186 +1,255 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sous-titrage et Chapitrage Automatique</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Sous-titreur Vidéo</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" type="text/css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="header">
-        <div class="projects">
-            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M7 4v16M17 4v16M3 8h18M3 16h18'/%3E%3C/svg%3E" alt="Projects icon">
-            Projects
+        <div class="logo-container">
+            <span class="logo-text">
+                <span class="logo-icon">🎬</span>
+                <span class="product-name">Subtitle<span class="accent">AI</span></span>
+            </span>
         </div>
-        <button class="start-btn" onclick="startProcess()">Start</button>
+        <button class="start-btn" onclick="startProcess()">Commencer</button>
     </div>
 
     <div class="features">
+        <!-- Sélection du fichier -->
         <div class="feature-card">
             <div class="feature-icon">
-                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M12 6v6m0 0v6m0-6h6m-6 0H6'/%3E%3C/svg%3E" alt="Upload icon" width="24" height="24">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                    <polyline points="13 2 13 9 20 9"></polyline>
+                </svg>
             </div>
-            <div class="feature-title">Upload Video</div>
+            <h3 class="feature-title">Sélectionner une vidéo</h3>
             <div class="feature-content">
-                <input type="file" id="fileInput" accept="video/*" onchange="handleFileSelect(event)">
-                <div id="fileName"></div>
+                <div class="custom-file-input">
+                    <input type="file" id="fileInput" accept="video/*" onchange="handleFileSelect(event)">
+                    <span id="fileInputText">Choisir un fichier</span>
+                </div>
             </div>
         </div>
+
+        <!-- Options -->
         <div class="feature-card">
             <div class="feature-icon">
-                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'/%3E%3C/svg%3E" alt="Style icon" width="24" height="24">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
             </div>
-            <div class="feature-title">Choose Subtitle Style</div>
-            <div class="feature-content">
-                <select id="styleSelect">
-                    <option value="default">Default</option>
-                    <option value="youtube_shorts">YouTube Shorts</option>
-                    <option value="minimalist">Minimalist</option>
-                    <option value="highlight">Highlight</option>
-                </select>
-            </div>
-        </div>
-        <div class="feature-card">
-            <div class="feature-icon">
-                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129'/%3E%3C/svg%3E" alt="Language icon" width="24" height="24">
-            </div>
-            <div class="feature-title">Choose Subtitle Language</div>
+            <h3 class="feature-title">Options</h3>
             <div class="feature-content">
                 <select id="languageSelect">
                     <option value="fr">Français</option>
-                    <option value="en">English</option>
-                    <option value="es">Español</option>
-                    <option value="de">Deutsch</option>
+                    <option value="en">Anglais</option>
+                    <option value="es">Espagnol</option>
+                    <option value="de">Allemand</option>
+                </select>
+                <select id="styleSelect">
+                    <option value="default">Style par défaut</option>
+                    <option value="youtube_shorts">YouTube Shorts</option>
+                    <option value="minimalist">Minimaliste</option>
+                    <option value="highlight">Surligné</option>
                 </select>
             </div>
         </div>
+
+        <!-- Nouvelle carte pour le chapitrage -->
         <div class="feature-card">
             <div class="feature-icon">
-                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M7 4v16M17 4v16M3 8h18M3 16h18'/%3E%3C/svg%3E" alt="Chapters icon" width="24" height="24">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="8" y1="6" x2="21" y2="6"></line>
+                    <line x1="8" y1="12" x2="21" y2="12"></line>
+                    <line x1="8" y1="18" x2="21" y2="18"></line>
+                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                </svg>
             </div>
-            <div class="feature-title">Create Chapters</div>
+            <h3 class="feature-title">Chapitrage</h3>
             <div class="feature-content">
-                <input type="checkbox" id="createChapters" name="createChapters">
-                <label for="createChapters">Generate Chapters for YouTube</label>
+                <label class="checkbox-wrapper">
+                    <input type="checkbox" id="chapteringEnabled">
+                    <span>Activer le chapitrage automatique</span>
+                </label>
             </div>
         </div>
     </div>
 
-    <div class="video-display">
-        <div class="no-video-message" id="noVideoMessage">
-            Aucune vidéo n'a été téléchargée. Utilisez le bouton "Upload a video" pour commencer.
+    <!-- Prévisualisation vidéo -->
+    <div class="video-preview" id="videoPreviewContainer">
+        <h3>Prévisualisation</h3>
+        <video id="videoPreview" controls>
+            <source src="" type="video/mp4">
+            Votre navigateur ne supporte pas la lecture vidéo.
+        </video>
+        <div class="video-metadata" id="videoMetadata">
+            <span id="videoDuration"></span>
+            <span id="videoDimensions"></span>
+            <span id="videoSize"></span>
         </div>
-        <div class="video-info" id="videoInfo">
-            <div class="video-details">
-                <div class="video-thumbnail" id="videoThumbnail"></div>
-                <div>
-                    <h3 class="video-title" id="videoTitle">Titre de la vidéo</h3>
-                    <p class="video-duration" id="videoDuration">Durée: 00:00</p>
-                </div>
-            </div>
-            <div class="video-metadata">
-                <span class="video-dimensions" id="videoDimensions">Dimensions: --</span>
-                <span class="video-size" id="videoSize">Taille: --</span>
-                <span class="video-framerate" id="videoFramerate">Images par seconde: --</span>
-            </div>
+    </div>
 
-            <!-- Barre de progression -->
-            <div id="progressBarContainer">
-                <div id="progressBar">
-                    <div id="progressBarFill"></div>
-                </div>
-                <p id="progressText">0%</p>
-            </div>
-
-            <div id="downloadLink" style="margin-top: 20px;"></div>
+    <!-- Barre de progression -->
+    <div id="progressBarContainer" style="display: none;">
+        <div id="progressBar">
+            <div id="progressBarFill"></div>
         </div>
+        <p id="progressText">0%</p>
+    </div>
 
-        <!-- Section Chapitrage -->
-        <div id="chaptersSection" style="display: none; margin-top: 20px;">
-            <h3>Chapters</h3>
-            <pre id="chaptersText" style="background-color: #2a2a2a; padding: 10px; border-radius: 5px; color: #a0a0a0;"></pre>
-        </div>
+    <!-- Zone de téléchargement -->
+    <div id="downloadSection" style="display: none;">
+        <div id="downloadLink"></div>
     </div>
 
     <script>
-        let selectedFile = null;
+    function handleFileSelect(event) {
+        const file = event.target.files[0];
+        const fileInputText = document.getElementById('fileInputText');
+        
+        if (file) {
+            fileInputText.textContent = file.name;
+            
+            // Afficher la prévisualisation
+            const videoPreview = document.getElementById('videoPreview');
+            const videoPreviewContainer = document.getElementById('videoPreviewContainer');
+            
+            videoPreview.src = URL.createObjectURL(file);
+            videoPreviewContainer.style.display = 'block';
 
-        function handleFileSelect(event) {
-            selectedFile = event.target.files[0];
-            if (selectedFile) {
-                document.getElementById('fileName').textContent = `Fichier sélectionné: ${selectedFile.name}`;
-                document.getElementById('noVideoMessage').style.display = 'none';
-            }
+            // Mettre à jour les métadonnées
+            videoPreview.onloadedmetadata = function() {
+                const duration = Math.round(videoPreview.duration);
+                const minutes = Math.floor(duration / 60);
+                const seconds = duration % 60;
+                
+                document.getElementById('videoDuration').textContent = 
+                    `Durée: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+                document.getElementById('videoDimensions').textContent = 
+                    `Dimensions: ${videoPreview.videoWidth}x${videoPreview.videoHeight}`;
+            };
+
+            // Afficher la taille du fichier
+            const size = (file.size / (1024 * 1024)).toFixed(2);
+            document.getElementById('videoSize').textContent = `Taille: ${size} MB`;
         }
+    }
 
-        function startProcess() {
-            if (!selectedFile) {
-                alert("Veuillez d'abord télécharger une vidéo.");
-                return;
-            }
-
-            document.getElementById("progressBarContainer").style.display = "block";
-
-            const formData = new FormData();
-            formData.append('file', selectedFile);
-            formData.append('language', document.getElementById('languageSelect').value);
-            formData.append('style', document.getElementById('styleSelect').value);
-            formData.append('createChapters', document.getElementById('createChapters').checked);
-
-            fetch('/upload', {
-                method: 'POST',
-                body: formData
-            })
+    function checkStatus() {
+        fetch('/status')
             .then(response => response.json())
             .then(data => {
-                if (data.error) {
-                    alert(data.error);
-                } else {
-                    updateVideoInfo(data.metadata);
-                    document.getElementById('downloadLink').innerHTML = `<a href="${data.video_url}" download>Télécharger la vidéo sous-titrée</a>`;
-
-                    // Affiche le chapitrage si généré
-                    if (data.chapters) {
-                        document.getElementById('chaptersSection').style.display = 'block';
-                        document.getElementById('chaptersText').textContent = data.chapters;
-                    }
+                if (data.progress) {
+                    document.getElementById('progressBarFill').style.width = data.progress + '%';
+                    document.getElementById('progressText').textContent = data.progress + '%';
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Une erreur est survenue lors du téléchargement.');
             });
+    }
 
-            checkProgress();
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type} show`;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+
+    function startProcess() {
+        const file = document.getElementById('fileInput').files[0];
+        if (!file) {
+            showNotification('Veuillez sélectionner une vidéo', 'error');
+            return;
         }
 
-        function checkProgress() {
-            const progressBarFill = document.getElementById("progressBarFill");
-            const progressText = document.getElementById("progressText");
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('language', document.getElementById('languageSelect').value);
+        formData.append('style', document.getElementById('styleSelect').value);
+        formData.append('createChapters', document.getElementById('chapteringEnabled').checked);
 
-            const intervalId = setInterval(() => {
-                fetch('/status')
-                    .then(response => response.json())
-                    .then(data => {
-                        const progress = data.progress;
-                        progressBarFill.style.width = `${progress}%`;
-                        progressText.textContent = `${progress}%`;
+        // Afficher la barre de progression de l'upload
+        const uploadProgress = document.createElement('div');
+        uploadProgress.className = 'upload-progress';
+        uploadProgress.innerHTML = `
+            <div class="upload-progress-bar">
+                <div class="upload-progress-fill"></div>
+            </div>
+            <div class="upload-progress-text">0%</div>
+        `;
+        document.querySelector('.feature-card').appendChild(uploadProgress);
+        uploadProgress.style.display = 'block';
 
-                        if (progress >= 100) {
-                            clearInterval(intervalId);
-                        }
-                    });
-            }, 1000);
-        }
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/upload', true);
 
-        function updateVideoInfo(metadata) {
-            document.getElementById('videoInfo').style.display = 'block';
-            document.getElementById('videoTitle').textContent = selectedFile.name;
-            document.getElementById('videoDuration').textContent = `Durée: ${metadata.duration}`;
-            document.getElementById('videoDimensions').textContent = `Dimensions: ${metadata.dimensions}`;
-            document.getElementById('videoSize').textContent = `Taille: ${metadata.size}`;
-            document.getElementById('videoFramerate').textContent = `Images par seconde: ${metadata.frame_rate}`;
-        }
+        xhr.upload.onprogress = function(e) {
+            if (e.lengthComputable) {
+                const percentComplete = (e.loaded / e.total) * 100;
+                uploadProgress.querySelector('.upload-progress-fill').style.width = percentComplete + '%';
+                uploadProgress.querySelector('.upload-progress-text').textContent = Math.round(percentComplete) + '%';
+            }
+        };
+
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                const response = JSON.parse(xhr.responseText);
+                if (response.error) {
+                    showNotification(response.error, 'error');
+                } else {
+                    showNotification('Traitement terminé !');
+                    const downloadSection = document.getElementById('downloadSection');
+                    downloadSection.style.display = 'block';
+                    downloadSection.innerHTML = `
+                        <a href="${response.video_url}" class="download-button" download>Télécharger la vidéo</a>
+                        ${response.chapters ? `
+                            <div id="chaptersSection" style="display: block; margin-top: 20px;">
+                                <h3>Chapitres générés</h3>
+                                <pre id="chaptersText">${response.chapters}</pre>
+                            </div>
+                        ` : ''}
+                    `;
+                }
+            } else {
+                showNotification('Erreur lors du traitement', 'error');
+            }
+            uploadProgress.remove();
+            document.getElementById('progressBarContainer').style.display = 'block';
+        };
+
+        xhr.onerror = function() {
+            showNotification('Erreur lors de l\'upload', 'error');
+            uploadProgress.remove();
+        };
+
+        xhr.send(formData);
+        const statusInterval = setInterval(checkStatus, 1000);
+    }
+
+    function deleteFile(filename) {
+        fetch(`/delete/${filename}`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Fichier supprimé avec succès');
+                document.getElementById('downloadSection').style.display = 'none';
+            } else {
+                showNotification('Erreur lors de la suppression', 'error');
+            }
+        });
+    }
     </script>
 </body>
 </html>
