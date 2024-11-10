@@ -330,3 +330,45 @@ select {
     background: linear-gradient(90deg, #7c3aed, #9461ff);
     transition: width 0.3s ease-in-out;
 }
+
+/* Style pour aligner le formulaire de connexion et le bouton "Commencer" */
+.header {
+    display: flex;
+    justify-content: flex-end; /* Ajuste l'alignement des éléments */
+    align-items: center;
+    padding: 16px 24px;
+    gap: 16px; /* Espace entre les éléments */
+}
+
+#login-container {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Espace entre les champs du formulaire */
+}
+
+/* Style des champs de saisie dans le formulaire de connexion */
+#login-container input {
+    padding: 8px;
+    font-size: 14px;
+    color: #ffffff;
+    background-color: #3a3a3a;
+    border: 1px solid #4a4a4a;
+    border-radius: 4px;
+    outline: none;
+}
+
+/* Bouton de connexion dans le formulaire */
+#login-container button {
+    padding: 8px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    background-color: #7c3aed;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+#login-container button:hover {
+    background-color: #9461ff;
+}
