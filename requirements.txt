@@ -1,6 +1,6 @@
 Flask==2.3.3
-werkzeug==2.3.3
-whisper
+werkzeug==2.3.7
+openai-whisper
 python-srt==1.1.3
 torch==2.0.1
 torchaudio==2.0.1
