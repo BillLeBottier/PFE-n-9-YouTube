@@ -1,14 +1,22 @@
 from flask import Flask, render_template, request, redirect, send_from_directory, url_for, jsonify
 from werkzeug.utils import secure_filename
 import os
-import whisper
-import subprocess
+from openai import OpenAI
 from datetime import timedelta
 import re
 from collections import defaultdict, Counter
 import time
 from datetime import datetime
 import logging
+import requests
+from dotenv import load_dotenv
+import subprocess  
+
+# Chargement des variables d'environnement
+load_dotenv()
+
+# Configuration d'OpenAI
+client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
 # Configuration du logging
 logging.basicConfig(level=logging.INFO)
@@ -23,7 +31,6 @@ ALLOWED_EXTENSIONS = {'mp4', 'avi', 'mov', 'mkv'}
 MAX_CONTENT_LENGTH = 500 * 1024 * 1024  # 500MB max
 app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
 
-model = whisper.load_model("medium")
 process_status = {"progress": 0}  # Variable pour le suivi du statut
 
 @app.route('/')
@@ -159,96 +166,108 @@ def summarize_content(content):
     return " ".join(most_common).capitalize() + "..."  # Résumé avec les mots fréquents
 
 def generate_chapters(filepath):
-    """Génère des chapitres pour YouTube en regroupant les segments en fonction des thèmes."""
-    result = model.transcribe(filepath)
-    segments = result["segments"]
+    """Génère des chapitres en utilisant l'API OpenAI Whisper"""
+    try:
+        with open(filepath, "rb") as audio_file:
+            transcript = client.audio.transcriptions.create(
+                file=audio_file,
+                model="whisper-1",
+                language="fr",
+                response_format="verbose_json"
+            )
 
-    # Initialisation des chapitres
-    chapters = []
-    current_chapter = {"start": None, "end": None, "content": ""}
-    keywords = []
-    
-    for i, segment in enumerate(segments):
-        # Extraction des mots-clés de chaque segment
-        segment_keywords = extract_keywords(segment["text"])
+        segments = transcript.segments
         
-        # Comparaison des mots-clés pour détecter un changement de thème
-        if current_chapter["content"]:
-            common_keywords = set(segment_keywords) & set(keywords)
-            # S'il y a peu de mots-clés en commun, on considère un changement de thème
-            if len(common_keywords) < 2:
-                # Enregistre le chapitre courant
-                chapters.append({
-                    "start": current_chapter["start"],
-                    "end": timedelta(seconds=segment["start"]),
-                    "title": summarize_content(current_chapter["content"])
-                })
-                # Redémarre un nouveau chapitre
-                current_chapter = {"start": timedelta(seconds=segment["start"]), "end": None, "content": ""}
-                keywords = segment_keywords  # Mots-clés pour le nouveau chapitre
+        # Initialisation des chapitres
+        chapters = []
+        current_chapter = {"start": None, "end": None, "content": ""}
+        keywords = []
+        
+        for i, segment in enumerate(segments):
+            # Extraction des mots-clés de chaque segment
+            segment_keywords = extract_keywords(segment.text)
+            
+            # Comparaison des mots-clés pour détecter un changement de thème
+            if current_chapter["content"]:
+                common_keywords = set(segment_keywords) & set(keywords)
+                # S'il y a peu de mots-clés en commun, on considère un changement de thème
+                if len(common_keywords) < 2:
+                    # Enregistre le chapitre courant
+                    chapters.append({
+                        "start": current_chapter["start"],
+                        "end": timedelta(seconds=segment.start),
+                        "title": summarize_content(current_chapter["content"])
+                    })
+                    # Redémarre un nouveau chapitre
+                    current_chapter = {"start": timedelta(seconds=segment.start), "end": None, "content": ""}
+                    keywords = segment_keywords  # Mots-clés pour le nouveau chapitre
+                else:
+                    keywords.extend(segment_keywords)
             else:
-                keywords.extend(segment_keywords)
-        else:
-            # Début d'un nouveau chapitre
-            current_chapter["start"] = timedelta(seconds=segment["start"])
-            keywords = segment_keywords
+                # Début d'un nouveau chapitre
+                current_chapter["start"] = timedelta(seconds=segment.start)
+                keywords = segment_keywords
+            
+            # Ajoute le contenu actuel au chapitre en cours
+            current_chapter["content"] += segment.text + " "
         
-        # Ajoute le contenu actuel au chapitre en cours
-        current_chapter["content"] += segment["text"] + " "
-    
-    # Ajoute le dernier chapitre
-    if current_chapter["content"]:
-        chapters.append({
-            "start": current_chapter["start"],
-            "end": timedelta(seconds=segments[-1]["end"]),
-            "title": summarize_content(current_chapter["content"])
-        })
+        # Ajoute le dernier chapitre
+        if current_chapter["content"]:
+            chapters.append({
+                "start": current_chapter["start"],
+                "end": timedelta(seconds=segments[-1].end),
+                "title": summarize_content(current_chapter["content"])
+            })
 
-    # Formate les chapitres pour l'affichage
-    chapters_text = "CHAPITRAGE\n\n"
-    for chapter in chapters:
-        start_str = f"{int(chapter['start'].total_seconds() // 60):02}:{int(chapter['start'].total_seconds() % 60):02}"
-        chapters_text += f"{start_str} - {chapter['title']}\n"
+        # Formate les chapitres pour l'affichage
+        chapters_text = "CHAPITRAGE\n\n"
+        for chapter in chapters:
+            start_str = f"{int(chapter['start'].total_seconds() // 60):02}:{int(chapter['start'].total_seconds() % 60):02}"
+            chapters_text += f"{start_str} - {chapter['title']}\n"
 
-    return chapters_text
+        return chapters_text
+
+    except Exception as e:
+        logger.error(f"Erreur lors de la génération des chapitres: {str(e)}")
+        raise
 
 def transcribe_video(filepath, language):
-    # Mapping des codes de langue
-    language_mapping = {
-        'fr': 'french',
-        'en': 'english',
-        'es': 'spanish',
-        'de': 'german'
-    }
-    
-    # Utiliser le nom complet de la langue
-    lang = language_mapping.get(language, 'french')
-    
-    result = model.transcribe(
-        filepath,
-        task="transcribe",
-        language=lang,
-        verbose=False
-    )
+    """Transcrit la vidéo en utilisant l'API OpenAI Whisper"""
+    try:
+        # Ouvrir le fichier audio
+        with open(filepath, "rb") as audio_file:
+            # Appel à l'API OpenAI avec la nouvelle syntaxe
+            transcript = client.audio.transcriptions.create(
+                file=audio_file,
+                model="whisper-1",
+                language=language,
+                response_format="verbose_json"
+            )
 
-    segments = result["segments"]
-    vtt_content = "WEBVTT\n\n"
-    
-    for segment in segments:
-        start = timedelta(seconds=segment["start"])
-        end = timedelta(seconds=segment["end"])
-        content = segment["text"].strip()
+        # Création du fichier VTT
+        vtt_content = "WEBVTT\n\n"
         
-        start_str = f"{int(start.total_seconds() // 3600):02}:{int((start.total_seconds() % 3600) // 60):02}:{int(start.total_seconds() % 60):02}.{int(start.microseconds / 1000):03}"
-        end_str = f"{int(end.total_seconds() // 3600):02}:{int((end.total_seconds() % 3600) // 60):02}:{int(end.total_seconds() % 60):02}.{int(end.microseconds / 1000):03}"
-        
-        vtt_content += f"{start_str} --> {end_str}\n{content}\n\n"
+        # Parcourir les segments de la transcription
+        for segment in transcript.segments:
+            start = timedelta(seconds=float(segment.start))
+            end = timedelta(seconds=float(segment.end))
+            content = segment.text.strip()
+            
+            start_str = f"{int(start.total_seconds() // 3600):02}:{int((start.total_seconds() % 3600) // 60):02}:{int(start.total_seconds() % 60):02}.{int(start.microseconds / 1000):03}"
+            end_str = f"{int(end.total_seconds() // 3600):02}:{int((end.total_seconds() % 3600) // 60):02}:{int(end.total_seconds() % 60):02}.{int(end.microseconds / 1000):03}"
+            
+            vtt_content += f"{start_str} --> {end_str}\n{content}\n\n"
 
-    vtt_path = filepath.rsplit('.', 1)[0] + ".vtt"
-    with open(vtt_path, "w", encoding="utf-8-sig") as vtt_file:
-        vtt_file.write(vtt_content)
+        # Sauvegarder le fichier VTT
+        vtt_path = filepath.rsplit('.', 1)[0] + ".vtt"
+        with open(vtt_path, "w", encoding="utf-8-sig") as vtt_file:
+            vtt_file.write(vtt_content)
 
-    return vtt_path
+        return vtt_path
+
+    except Exception as e:
+        logger.error(f"Erreur lors de la transcription: {str(e)}")
+        raise
 
 def add_subtitles_to_video(video_path, vtt_path, style):
     output_path = video_path.rsplit('.', 1)[0] + "_subtitled.mp4"
