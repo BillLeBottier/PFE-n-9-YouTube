@@ -1,6 +1,7 @@
 # Environnements virtuels Python
 venv/
 .env/
+.env
 
 # Fichiers de configuration spécifique à l'environnement
 *.pyc
@@ -15,4 +16,4 @@ instance/
 uploads/
 
 # Clés et informations sensibles
-config.yaml
+config.yaml.env
