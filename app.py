@@ -12,7 +12,6 @@ import requests
 from dotenv import load_dotenv
 import subprocess  
 
-
 # Chargement des variables d'environnement
 load_dotenv()
 
