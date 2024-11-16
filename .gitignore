@@ -2,7 +2,7 @@
 venv/
 .env/
 .env
-
+*.env
 # Fichiers de configuration spécifique à l'environnement
 *.pyc
 __pycache__/
