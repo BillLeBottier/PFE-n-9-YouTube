@@ -3,7 +3,6 @@ instance_class: F1
 
 env_variables:
   OPENAI_API_KEY: ${OPENAI_API_KEY}
-  CLOUD_STORAGE_BUCKET: "video-subtitles-storage-xyz"
 
 handlers:
 - url: /static
@@ -26,7 +25,3 @@ automatic_scaling:
 
 inbound_services:
 - warmup
-
-basic_scaling:
-  max_instances: 5
-  idle_timeout: 10m
