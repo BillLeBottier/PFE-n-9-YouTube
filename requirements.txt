@@ -4,7 +4,8 @@ openai>=1.3.0
 python-dotenv==1.0.0
 requests==2.31.0
 ffmpeg-python==0.2.0
-python-srt==1.1.3
+gunicorn==21.2.0
+pysrt==1.1.2
 torch==2.0.1
 torchaudio==2.0.1
 numpy>=1.23.5
