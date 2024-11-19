@@ -11,12 +11,21 @@ import logging
 import requests
 from dotenv import load_dotenv
 import subprocess  
+from google.cloud import secretmanager
 
 # Chargement des variables d'environnement
 load_dotenv()
 
+def access_secret_version(project_id, secret_id, version_id="latest"):
+    client = secretmanager.SecretManagerServiceClient()
+    name = f"projects/{project_id}/secrets/{secret_id}/versions/{version_id}"
+    response = client.access_secret_version(request={"name": name})
+    return response.payload.data.decode("UTF-8")
+
 # Configuration d'OpenAI
-client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+project_id = "still-catwalk-441910-u6"  # Votre ID de projet
+OPENAI_API_KEY = access_secret_version(project_id, "openai-api-key")
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 # Configuration du logging
 logging.basicConfig(level=logging.INFO)
