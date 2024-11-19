@@ -2,7 +2,11 @@ runtime: python39
 instance_class: F1
 
 env_variables:
-  OPENAI_API_KEY: ${OPENAI_API_KEY}
+  CLOUD_STORAGE_BUCKET: "video-subtitles-storage-xyz"
+
+# Référence au secret
+includes:
+  - env_secrets.yaml
 
 handlers:
 - url: /static
