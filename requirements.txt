@@ -16,3 +16,5 @@ regex>=2023.6.3
 pathlib==1.0.1
 typing-extensions>=4.5.0
 colorama>=0.4.6
+google-cloud-storage==2.13.0
+google-cloud-secret-manager==2.16.4
