@@ -65,12 +65,12 @@
                     <option value="default">Style par défaut</option>
                     <option value="youtube_shorts">YouTube Shorts</option>
                     <option value="minimalist">Minimaliste</option>
-                    <option value="highlight">Surligné</option>
+                    <option value="karaoke">Karaoke</option>
                 </select>
             </div>
         </div>
 
-        <!-- Nouvelle carte pour le chapitrage -->
+        <!-- Dans la carte des options avancées -->
         <div class="feature-card">
             <div class="feature-icon">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -82,11 +82,15 @@
                     <line x1="3" y1="18" x2="3.01" y2="18"></line>
                 </svg>
             </div>
-            <h3 class="feature-title">Chapitrage</h3>
+            <h3 class="feature-title">Options avancées</h3>
             <div class="feature-content">
                 <label class="checkbox-wrapper">
                     <input type="checkbox" id="chapteringEnabled">
                     <span>Activer le chapitrage automatique</span>
+                </label>
+                <label class="checkbox-wrapper">
+                    <input type="checkbox" id="generateShortsEnabled">
+                    <span>Générer des shorts</span>
                 </label>
             </div>
         </div>
@@ -118,6 +122,8 @@
     <div id="downloadSection" style="display: none;">
         <div id="downloadLink"></div>
     </div>
+
+   
 
     <script>
     function handleFileSelect(event) {
@@ -186,8 +192,9 @@
         formData.append('language', document.getElementById('languageSelect').value);
         formData.append('style', document.getElementById('styleSelect').value);
         formData.append('createChapters', document.getElementById('chapteringEnabled').checked);
+        formData.append('createShorts', document.getElementById('generateShortsEnabled').checked);
 
-        // Afficher la barre de progression de l'upload
+        // Afficher la barre de progression
         const uploadProgress = document.createElement('div');
         uploadProgress.className = 'upload-progress';
         uploadProgress.innerHTML = `
@@ -217,17 +224,37 @@
                     showNotification(response.error, 'error');
                 } else {
                     showNotification('Traitement terminé !');
+                    
+                    // Afficher les résultats
                     const downloadSection = document.getElementById('downloadSection');
                     downloadSection.style.display = 'block';
                     downloadSection.innerHTML = `
                         <a href="${response.video_url}" class="download-button" download>Télécharger la vidéo</a>
+                        <a href="${response.vtt_url}" class="download-button" download>Télécharger le fichier .vtt</a>
                         ${response.chapters ? `
-                            <div id="chaptersSection" style="display: block; margin-top: 20px;">
+                            <div id="chaptersSection">
                                 <h3>Chapitres générés</h3>
-                                <pre id="chaptersText">${response.chapters}</pre>
+                                <pre>${response.chapters}</pre>
+                            </div>
+                            <div id="summarySection">
+                                <h3>Résumé global</h3>
+                                <p>${response.summary}</p>
+                            </div>
+                            <div id="personalSummarySection">
+                                <h3>Résumé à la première personne</h3>
+                                <p>${response.personal_summary}</p>
+                            </div>
+                            <div id="keywordsSection">
+                                <h3>Mots-clés</h3>
+                                <p>${response.keywords}</p>
                             </div>
                         ` : ''}
                     `;
+
+                    // Si la génération de shorts est activée, lancer la génération
+                    if (document.getElementById('generateShortsEnabled').checked) {
+                        generateShorts(response.video_url, response.vtt_url);
+                    }
                 }
             } else {
                 showNotification('Erreur lors du traitement', 'error');
@@ -236,13 +263,46 @@
             document.getElementById('progressBarContainer').style.display = 'block';
         };
 
-        xhr.onerror = function() {
-            showNotification('Erreur lors de l\'upload', 'error');
-            uploadProgress.remove();
-        };
-
         xhr.send(formData);
         const statusInterval = setInterval(checkStatus, 1000);
+    }
+
+    function generateShorts(videoUrl, vttUrl) {
+        const formData = new FormData();
+        formData.append('video_path', videoUrl);
+        formData.append('vtt_path', vttUrl);
+
+        fetch('/generate_shorts', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.shorts) {
+                const shortsSection = document.createElement('div');
+                shortsSection.id = 'shortsSection';
+                shortsSection.innerHTML = `
+                    <h3>Shorts générés</h3>
+                    <div class="shorts-container">
+                        ${data.shorts.map(short => `
+                            <div class="short-preview">
+                                <video controls width="320">
+                                    <source src="${short.url}" type="video/mp4">
+                                </video>
+                                <p>${short.description}</p>
+                                <p>Durée: ${short.start} - ${short.end}</p>
+                                <a href="${short.url}" download class="download-button">Télécharger</a>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                document.getElementById('downloadSection').appendChild(shortsSection);
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            showNotification('Erreur lors de la génération des shorts', 'error');
+        });
     }
 
     function deleteFile(filename) {
