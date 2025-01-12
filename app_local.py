@@ -305,10 +305,10 @@ def extract_shorts_timestamps(vtt_path: str) -> List[Dict]:
         Analyse ce fichier de sous-titres VTT et identifie 3 à 5 segments intéressants pour créer des shorts.
 
         Règles pour les segments :
-        - Durée entre 15 et 45 secondes
-        - Contenu accrocheur et autonome (compréhensible sans contexte)
+        - Durée entre 20 et 45 secondes
+        - Contenu accrocheur et autonome qui est compréhensible sans contexte
         - Utilise les timestamps existants du VTT
-        - Évite les segments qui coupent une phrase au milieu
+        - Termine un segment sur une fin de phrase 
 
         Contenu VTT :
         {vtt_content}
