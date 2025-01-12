@@ -61,12 +61,52 @@
                     <option value="es">Espagnol</option>
                     <option value="de">Allemand</option>
                 </select>
-                <select id="styleSelect">
-                    <option value="default">Style par défaut</option>
-                    <option value="youtube_shorts">YouTube Shorts</option>
-                    <option value="minimalist">Minimaliste</option>
-                    <option value="karaoke">Karaoke</option>
-                </select>
+                <div class="custom-select" id="styleSelect">
+                    <div class="custom-select-header" onclick="toggleSelect()">
+                        <span id="selectedStyle">Style par défaut</span>
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor">
+                            <path d="M2 4L6 8L10 4" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <div class="custom-select-options">
+                        <div class="custom-select-option" data-value="default" onclick="selectStyle(this)">
+                            Style par défaut
+                            <div class="style-preview-container">
+                                <div class="style-preview">
+                                    <img src="/static/previews/default.png" alt="Style par défaut">
+                                    <div class="style-description">Sous-titres classiques en bas de la vidéo</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="custom-select-option" data-value="youtube_shorts" onclick="selectStyle(this)">
+                            YouTube Shorts
+                            <div class="style-preview-container">
+                                <div class="style-preview">
+                                    <img src="/static/previews/shorts.png" alt="Style YouTube Shorts">
+                                    <div class="style-description">Style optimisé pour les formats courts, texte plus grand et centré</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="custom-select-option" data-value="minimalist" onclick="selectStyle(this)">
+                            Minimaliste
+                            <div class="style-preview-container">
+                                <div class="style-preview">
+                                    <img src="/static/previews/minimalist.png" alt="Style minimaliste">
+                                    <div class="style-description">Design épuré avec fond semi-transparent</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="custom-select-option" data-value="karaoke" onclick="selectStyle(this)">
+                            Karaoke
+                            <div class="style-preview-container">
+                                <div class="style-preview">
+                                    <img src="/static/previews/karaoke.png" alt="Style karaoké">
+                                    <div class="style-description">Affichage mot par mot synchronisé avec la parole</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -180,6 +220,27 @@
         }, 3000);
     }
 
+    // Variable globale pour stocker le style sélectionné
+    let currentSelectedStyle = 'default';
+
+    function selectStyle(element) {
+        const value = element.getAttribute('data-value');
+        const text = element.textContent.trim();
+        
+        // Stocker dans la variable globale
+        currentSelectedStyle = value;
+        
+        console.log('%c Style sélectionné: ' + value, 'background: #4CAF50; color: white; padding: 2px 5px; border-radius: 3px;');
+        
+        // Mettre à jour l'affichage
+        const selectedStyleElement = document.getElementById('selectedStyle');
+        selectedStyleElement.textContent = text;
+        selectedStyleElement.setAttribute('data-selected-value', value);
+        
+        // Fermer le select
+        document.getElementById('styleSelect').classList.remove('open');
+    }
+
     function startProcess() {
         const file = document.getElementById('fileInput').files[0];
         if (!file) {
@@ -190,7 +251,11 @@
         const formData = new FormData();
         formData.append('file', file);
         formData.append('language', document.getElementById('languageSelect').value);
-        formData.append('style', document.getElementById('styleSelect').value);
+        
+        // Utiliser la variable globale pour le style
+        console.log('%c Style envoyé au serveur: ' + currentSelectedStyle, 'background: #2196F3; color: white; padding: 2px 5px; border-radius: 3px;');
+        formData.append('style', currentSelectedStyle);
+        
         formData.append('createChapters', document.getElementById('chapteringEnabled').checked);
         formData.append('createShorts', document.getElementById('generateShortsEnabled').checked);
 
@@ -319,6 +384,19 @@
             }
         });
     }
+
+    function toggleSelect() {
+        const select = document.getElementById('styleSelect');
+        select.classList.toggle('open');
+    }
+
+    // Fermer le select si on clique ailleurs
+    document.addEventListener('click', function(e) {
+        const select = document.getElementById('styleSelect');
+        if (!select.contains(e.target)) {
+            select.classList.remove('open');
+        }
+    });
     </script>
 
     <!-- Ajout des scripts Firebase pour initialisation et authentification -->
