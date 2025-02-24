@@ -8,6 +8,12 @@ import subprocess
 from dotenv import load_dotenv
 import json
 from typing import List, Dict
+import shutil
+
+#import pour le fichier zip
+import io
+import zipfile
+from flask import send_file
 
 client = openai
 
@@ -129,7 +135,7 @@ def generate_chapters(video_path: str, vtt_path: str) -> str:
 
         # Prompt pour GPT avec le contenu VTT
         prompt = f"""
-        Analyse ce fichier de sous-titres au format VTT et crée des chapitres pertinents.
+        Analyse ce fichier de sous-titres au format VTT et crée des chapitres pertinents en FRANCAIS.
         Le fichier contient déjà les timestamps exacts, utilise-les pour créer des chapitres cohérents.
 
         Règles pour les chapitres :
@@ -143,7 +149,7 @@ def generate_chapters(video_path: str, vtt_path: str) -> str:
         Contenu VTT :
         {vtt_content}
 
-        Retourne uniquement les chapitres, un par ligne, sans texte supplémentaire.
+        Retourne uniquement les chapitres en FRANCAIS, un par ligne, sans texte supplémentaire.
         """
 
         response = client.chat.completions.create(
@@ -245,7 +251,7 @@ def generate_keywords(video_transcript: str) -> str:
     try:
         # Créer le prompt pour générer des mots-clés
         prompt = f"""
-        Voici la transcription d'une vidéo. Génère une liste de 5 à 10 mots-clés pertinents qui résument le contenu de cette vidéo.
+        Voici la transcription d'une vidéo. Génère une liste de 5 à 10 mots-clés pertinents en FRANCAIS qui résument le contenu de cette vidéo.
 
         --- Transcription ---
         {video_transcript}
@@ -302,7 +308,7 @@ def extract_shorts_timestamps(vtt_path: str) -> List[Dict]:
             vtt_content = vtt_file.read()
 
         prompt = f"""
-        Analyse ce fichier de sous-titres VTT et identifie 3 à 5 segments intéressants pour créer des shorts.
+        Analyse ce fichier de sous-titres VTT et identifie 3 à 5 segments intéressants pour créer des shorts en FRANCAIS.
 
         Règles pour les segments :
         - Durée entre 20 et 45 secondes
@@ -318,7 +324,7 @@ def extract_shorts_timestamps(vtt_path: str) -> List[Dict]:
             {{
                 "start": "00:00:00",
                 "end": "00:00:30",
-                "description": "Description"
+                "description": "Description en français"
             }}
         ]
         """
@@ -368,6 +374,13 @@ def extract_shorts_timestamps(vtt_path: str) -> List[Dict]:
         logger.error(f"Erreur lors de l'extraction des timestamps pour shorts: {str(e)}")
         return []
 
+
+def clean_output_folder():
+    if os.path.exists(OUTPUT_FOLDER):
+        shutil.rmtree(OUTPUT_FOLDER)  # Supprime tout le dossier
+    os.makedirs(OUTPUT_FOLDER)  # Le recrée vide
+
+
 def create_short(video_path: str, start_time: str, end_time: str, index: int) -> str:
     """
     Crée un court segment vidéo à partir des timestamps donnés
@@ -404,6 +417,9 @@ def upload_file():
     global process_status
     process_status = {"progress": 0}
     
+    # Nettoyage du dossier output avant de traiter un nouveau fichier
+    clean_output_folder()
+
     try:
         if 'file' not in request.files:
             return jsonify({"error": "Aucun fichier envoyé"}), 400
@@ -554,6 +570,61 @@ def generate_shorts():
     except Exception as e:
         logger.error(f"Erreur lors de la génération des shorts: {str(e)}")
         return jsonify({"error": str(e)}), 500
+    
+
+
+@app.route('/generate_zip', methods=['POST'])
+def generate_zip():
+    # Lire les données envoyées avec le formulaire
+    chapters = request.form.get('chapters')
+    video_url = request.form.get('video_url')
+    vtt_url = request.form.get('vtt_url')
+    summary = request.form.get('summary')
+    personal_summary = request.form.get('personal_summary')
+    keywords = request.form.get('keywords')
+
+    # Vérifier si toutes les données nécessaires sont présentes
+    if not all([chapters, video_url, vtt_url, summary, personal_summary, keywords]):
+        return jsonify({"error": "Tous les paramètres doivent être fournis."}), 400
+
+    # Extraire les noms de fichiers à partir des URLs
+    video_filename = video_url.split('/')[-1]
+    vtt_filename = vtt_url.split('/')[-1]
+
+    # Construire les chemins vers les fichiers
+    video_path = os.path.join(OUTPUT_FOLDER, video_filename)
+    vtt_path = os.path.join(OUTPUT_FOLDER, vtt_filename)
+
+    # Créer le contenu du fichier texte (résumé)
+    summary_content = (
+        f"Chapitrage:\n{chapters}\n\n"
+        f"Résumé global:\n{summary}\n\n"
+        f"Résumé à la première personne:\n{personal_summary}\n\n"
+        f"Mots-clés:\n{keywords}\n"
+    )
+
+    # Créer le fichier ZIP
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+        # Ajouter la vidéo sous-titrée
+        if os.path.exists(video_path):
+            zip_file.write(video_path, arcname=video_filename)
+        # Ajouter le fichier .vtt
+        if os.path.exists(vtt_path):
+            zip_file.write(vtt_path, arcname=vtt_filename)
+        # Ajouter le fichier texte contenant les résumés et mots-clés
+        zip_file.writestr('summary.txt', summary_content)
+
+    zip_filename = 'video_package.zip'
+    zip_buffer.seek(0)
+    logger.info(f"Sending file: {zip_filename}")
+    return send_file(
+        zip_buffer,
+        mimetype='application/zip',
+        as_attachment=True,
+        download_name=zip_filename
+    )
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
