@@ -9,8 +9,9 @@ from dotenv import load_dotenv
 import json
 from typing import List, Dict
 import shutil
+import re
 
-#import pour le fichier zip
+#import pour le fichier zipcr
 import io
 import zipfile
 from flask import send_file
@@ -299,6 +300,30 @@ def extract_text_from_vtt(vtt_path):
         logger.error(f"Erreur lors de l'extraction du texte du fichier VTT: {str(e)}")
         raise
 
+#Ajout d'une fonction pour récupérer la résolution d'origine
+
+def get_video_resolution(video_path):
+    """Retourne la largeur et hauteur d'une vidéo en pixels."""
+    command = [
+        "ffprobe",
+        "-v", "error",
+        "-select_streams", "v:0",
+        "-show_entries", "stream=width,height",
+        "-of", "json",
+        video_path
+    ]
+
+    result = subprocess.run(command, capture_output=True, text=True)
+    info = json.loads(result.stdout)
+    
+    width = info["streams"][0]["width"]
+    height = info["streams"][0]["height"]
+    
+    return width, height
+
+
+#Fonction d'extraction de timestamps pour la création de shorts intelligents
+
 def extract_shorts_timestamps(vtt_path: str) -> List[Dict]:
     """
     Analyse le fichier VTT pour identifier des segments intéressants pour des shorts
@@ -314,7 +339,7 @@ def extract_shorts_timestamps(vtt_path: str) -> List[Dict]:
         - Durée entre 20 et 45 secondes
         - Contenu accrocheur et autonome qui est compréhensible sans contexte
         - Utilise les timestamps existants du VTT
-        - Termine un segment sur une fin de phrase 
+        - Termine un segment sur une fin de phrase
 
         Contenu VTT :
         {vtt_content}
@@ -383,21 +408,40 @@ def clean_output_folder():
 
 def create_short(video_path: str, start_time: str, end_time: str, index: int) -> str:
     """
-    Crée un court segment vidéo à partir des timestamps donnés
+    Crée un short au format vertical (1080x1920) sans bord noir.
     """
     try:
         output_filename = f"short_{index + 1}.mp4"
         output_path = os.path.join(OUTPUT_FOLDER, output_filename)
 
+        # Récupérer la résolution d'origine
+        width, height = get_video_resolution(video_path)
+
+        # Calcul du crop pour un format 9:16
+        target_aspect = 9 / 16
+        video_aspect = width / height
+
+        if video_aspect > target_aspect:
+            # La vidéo est trop large → on coupe sur les côtés
+            new_width = int(height * target_aspect)
+            crop_x = (width - new_width) // 2
+            crop_filter = f"crop={new_width}:{height}:{crop_x}:0"
+        else:
+            # La vidéo est trop haute → on coupe en haut et en bas
+            new_height = int(width / target_aspect)
+            crop_y = (height - new_height) // 2
+            crop_filter = f"crop={width}:{new_height}:0:{crop_y}"
+
         command = [
             "ffmpeg",
-            "-i", video_path,
-            "-ss", start_time,
-            "-to", end_time,
+            "-i", video_path,              # Vidéo source
+            "-ss", start_time,             # Début du segment
+            "-to", end_time,               # Fin du segment
+            "-vf", crop_filter,            # Recadrage sans bord noir
             "-c:v", "libx264",
             "-preset", "slow",
             "-crf", "18",
-            "-c:a", "copy",
+            "-c:a", "aac", "-b:a", "128k", # Audio optimisé
             output_path
         ]
 
@@ -407,6 +451,7 @@ def create_short(video_path: str, start_time: str, end_time: str, index: int) ->
     except Exception as e:
         logger.error(f"Erreur lors de la création du short: {str(e)}")
         raise
+
 
 @app.route('/')
 def index():
