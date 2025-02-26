@@ -132,6 +132,20 @@
                     <input type="checkbox" id="generateShortsEnabled">
                     <span>Générer des shorts</span>
                 </label>
+
+            </div>
+        </div>
+
+        <!-- Dans la carte des options avancées, après la checkbox generateShortsEnabled -->
+        <div id="shortsOptions" style="display: none; margin-top: 10px;">
+            <div style="margin-bottom: 10px;">
+                <label for="shortsCount">Nombre de shorts :</label>
+                <input type="number" id="shortsCount" min="1" max="10" value="3" style="width: 60px; margin-left: 10px; padding: 5px;">
+            </div>
+            <div>
+                <label for="shortsDuration">Durée des shorts (secondes) :</label>
+                <input type="number" id="shortsDuration" min="15" max="60" value="30" style="width: 60px; margin-left: 10px; padding: 5px;">
+
             </div>
         </div>
     </div>
@@ -349,6 +363,10 @@
         formData.append('video_path', videoUrl);
         formData.append('vtt_path', vttUrl);
 
+        formData.append('shorts_count', document.getElementById('shortsCount').value);
+        formData.append('shorts_duration', document.getElementById('shortsDuration').value);
+
+
         fetch('/generate_shorts', {
             method: 'POST',
             body: formData
@@ -409,6 +427,13 @@
             select.classList.remove('open');
         }
     });
+
+
+    // Ajouter ce script JavaScript
+    document.getElementById('generateShortsEnabled').addEventListener('change', function() {
+        document.getElementById('shortsOptions').style.display = this.checked ? 'block' : 'none';
+    });
+
     </script>
 
     <!-- Ajout des scripts Firebase pour initialisation et authentification -->
