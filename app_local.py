@@ -324,7 +324,9 @@ def get_video_resolution(video_path):
 
 #Fonction d'extraction de timestamps pour la création de shorts intelligents
 
+
 def extract_shorts_timestamps(vtt_path: str, shorts_count: int = 3, shorts_duration: int = 30) -> List[Dict]:
+
     """
     Analyse le fichier VTT pour identifier des segments intéressants pour des shorts
     """
@@ -333,6 +335,7 @@ def extract_shorts_timestamps(vtt_path: str, shorts_count: int = 3, shorts_durat
             vtt_content = vtt_file.read()
 
         prompt = f"""
+
         Analyse ce fichier de sous-titres VTT et identifie {shorts_count} segments intéressants pour créer des shorts en FRANCAIS.
 
         Règles pour les segments :
@@ -341,6 +344,7 @@ def extract_shorts_timestamps(vtt_path: str, shorts_count: int = 3, shorts_durat
         - Utilise les timestamps existants du VTT
         - Termine un segment sur une fin de phrase
         - Évite les chevauchements entre segments
+
 
         Contenu VTT :
         {vtt_content}
@@ -575,11 +579,13 @@ def get_status():
 
 @app.route('/generate_shorts', methods=['POST'])
 def generate_shorts():
+
     try:
         video_path = request.form.get('video_path')
         vtt_path = request.form.get('vtt_path')
         shorts_count = int(request.form.get('shorts_count', 3))
         shorts_duration = int(request.form.get('shorts_duration', 30))
+
 
         if not video_path or not vtt_path:
             return jsonify({"error": "Chemins vidéo et VTT requis"}), 400
@@ -588,8 +594,10 @@ def generate_shorts():
         video_path = os.path.join(OUTPUT_FOLDER, os.path.basename(video_path))
         vtt_path = os.path.join(OUTPUT_FOLDER, os.path.basename(vtt_path))
 
+
         # Extraction des segments avec les nouveaux paramètres
         segments = extract_shorts_timestamps(vtt_path, shorts_count, shorts_duration)
+
 
         # Création des shorts
         shorts_info = []
