@@ -256,6 +256,9 @@ select {
     margin-top: 20px;
     transition: background-color 0.3s;
     margin-left: 10px;
+    border: none;  /* Pour enlever le contour blanc */
+    outline: none;  /* Pour enlever l'éventuel contour de focus */
+    cursor: pointer; /* Changer le curseur pour indiquer que c'est un bouton cliquable */
 }
 
 .download-button:hover {
