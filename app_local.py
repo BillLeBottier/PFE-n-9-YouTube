@@ -94,18 +94,29 @@ def add_subtitles_to_video(video_path, vtt_path, style):
     # Configuration des styles de sous-titres (inchangée)
     if style == "youtube_shorts":
         subtitle_filter = (
-            f"subtitles='{vtt_path}':force_style='Fontsize=22,"
-            "Fontname=Arial,Bold=1,PrimaryColour=&HFFFFFF&,"
-            "OutlineColour=&H000000&,Outline=4,Shadow=0,"
-            "Alignment=2,MarginV=30'"
+            f"subtitles='{vtt_path}':force_style='Fontsize=20,"
+            "Fontname=Franklin Gothic Medium Italic,Bold=1,"
+            "PrimaryColour=&HFFFFFF&,OutlineColour=&H000000&,"
+            "Outline=2,Shadow=0,Alignment=2,MarginV=30'"
         )
+
     elif style == "minimalist":
         subtitle_filter = (
-            f"subtitles='{vtt_path}':force_style='Fontsize=20,"
-            "Fontname=Arial,Bold=1,PrimaryColour=&HFFFFFF&,"
-            "BackColour=&H80000000,Outline=0,Shadow=0,"
+            f"subtitles='{vtt_path}':force_style='Fontsize=16,"
+            "Fontname=Helvetica,Bold=0,PrimaryColour=&HFFFFFF&,"
+            "OutlineColour=&H000000&,Outline=0,Shadow=0,"
             "Alignment=2,MarginV=30'"
         )
+
+    elif style == "default":  # Style par défaut
+        subtitle_filter = (
+            f"subtitles='{vtt_path}':force_style='Fontsize=15,"
+            "Fontname=Arial,Bold=1,PrimaryColour=&HFFFFFF&,"
+            "OutlineColour=&H000000&,Outline=1,Shadow=0,"
+            "Alignment=2,MarginV=30'"
+        )
+
+
     else:  # style par défaut
         subtitle_filter = f"subtitles='{vtt_path}'"
 
