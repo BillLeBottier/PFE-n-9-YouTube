@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 import json
 from typing import List, Dict
 import shutil
+import webvtt
 import re
 
 #import pour le fichier zipcr
@@ -88,8 +89,75 @@ def transcribe_video(filepath, language):
         logger.error(f"Erreur lors de la transcription: {str(e)}")
         raise
 
+#Convertir fichier vtt en .ass pour sous-titres dynamiques
+
+def convert_vtt_to_ass(vtt_path, ass_path):
+    def format_timestamp(vtt_timestamp):
+        """Convertit un timestamp VTT en format ASS (h:mm:ss.cs)."""
+        h, m, s = vtt_timestamp.split(":")
+        s, ms = s.split(".")
+        return f"{int(h)}:{m}:{s}.{ms[:2]}"  # On garde seulement deux chiffres après la virgule
+
+    print(f"🔄 Conversion du VTT en ASS pour le karaoké : {vtt_path} → {ass_path}")
+
+    try:
+        with open(ass_path, "w", encoding="utf-8") as f:
+            # En-tête du fichier ASS
+            f.write("[Script Info]\n")
+            f.write("Title: Karaoke Subtitles\n")
+            f.write("ScriptType: v4.00+\n")
+            f.write("PlayResX: 1920\n")
+            f.write("PlayResY: 1080\n\n")
+
+            # Définition du style Karaoké
+            f.write("[V4+ Styles]\n")
+            f.write("Format: Name, Fontname, Fontsize, PrimaryColour, OutlineColour, BackColour, Bold, Italic, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n")
+            f.write("Style: Karaoke,Arial,60,&HFFFFFF,&H000000,&H000000,1,0,1,2,0,2,10,10,30,1\n\n")
+
+            # Section des événements (dialogues)
+            f.write("[Events]\n")
+            f.write("Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n")
+
+            for caption in webvtt.read(vtt_path):
+                start = format_timestamp(caption.start)
+                end = format_timestamp(caption.end)
+                text = caption.text.replace("\n", " ")
+
+                words = text.split()
+                if not words:
+                    print(f"⚠️ Sous-titre vide ignoré ({caption.start} → {caption.end})")
+                    continue
+
+                # Calculer la durée totale
+                start_seconds = sum(x * float(t) for x, t in zip([3600, 60, 1], caption.start.split(":")))
+                end_seconds = sum(x * float(t) for x, t in zip([3600, 60, 1], caption.end.split(":")))
+                total_duration = (end_seconds - start_seconds) * 100  # Convertir en centièmes de secondes
+
+                if total_duration <= 0:
+                    print(f"⚠️ Durée invalide ignorée ({caption.start} → {caption.end})")
+                    continue
+
+                # Durée par mot (répartition égale)
+                word_duration = max(int(total_duration / len(words)), 1)
+
+                # Texte karaoké avec timing progressif
+                karaoke_text = "".join([f"{{\\K{word_duration}}}{word} " for word in words])
+
+                # Ajouter la ligne dans le fichier ASS
+                f.write(f"Dialogue: 0,{start},{end},Karaoke,,0,0,0,,{karaoke_text.strip()}\n")
+
+        print(f"✅ Conversion terminée : {ass_path}")
+
+    except Exception as e:
+        print(f"❌ Erreur pendant la conversion : {e}")
+
+
+
 def add_subtitles_to_video(video_path, vtt_path, style):
+    
     output_path = os.path.join(OUTPUT_FOLDER, os.path.basename(video_path).rsplit('.', 1)[0] + "_subtitled.mp4")
+
+    ass_path = vtt_path.replace(".vtt", ".ass")
 
     # Configuration des styles de sous-titres (inchangée)
     if style == "youtube_shorts":
@@ -115,7 +183,10 @@ def add_subtitles_to_video(video_path, vtt_path, style):
             "OutlineColour=&H000000&,Outline=1,Shadow=0,"
             "Alignment=2,MarginV=30'"
         )
-
+    
+    elif style == "karaoke":
+        convert_vtt_to_ass(vtt_path, ass_path)
+        subtitle_filter = f"ass='{ass_path}'"  # Utiliser ASS pour un effet karaoké
 
     else:  # style par défaut
         subtitle_filter = f"subtitles='{vtt_path}'"
@@ -132,7 +203,13 @@ def add_subtitles_to_video(video_path, vtt_path, style):
         output_path
     ]
 
-    subprocess.run(command, check=True)
+
+    try:
+        subprocess.run(command, check=True)
+        print(f"✅ Vidéo avec sous-titres générée : {output_path}")
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Erreur FFmpeg : {e}")
+
     return output_path
 
 def generate_chapters(video_path: str, vtt_path: str) -> str:
