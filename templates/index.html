@@ -503,6 +503,7 @@
         const formData = new FormData();
         formData.append('original_video_filename', originalVideoFilename);
         formData.append('vtt_path', vttUrl);
+
         formData.append('shorts_count', document.getElementById('shortsCount').value);
         formData.append('shorts_duration', document.getElementById('shortsDuration').value);
         formData.append('style', currentSelectedStyle);
@@ -513,6 +514,7 @@
             shortsCount: document.getElementById('shortsCount').value,
             shortsDuration: document.getElementById('shortsDuration').value
         });
+
 
         fetch('/generate_shorts', {
             method: 'POST',

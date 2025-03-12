@@ -724,12 +724,14 @@ def get_status():
 
 @app.route('/generate_shorts', methods=['POST'])
 def generate_shorts():
+
     try:
         # Récupérer les paramètres
         original_filename = request.form.get('original_video_filename')
         vtt_path = request.form.get('vtt_path')
         shorts_count = int(request.form.get('shorts_count', 3))
         shorts_duration = int(request.form.get('shorts_duration', 30))
+
 
         # Logs de debugging
         logger.info(f"Paramètres reçus:")
@@ -761,6 +763,8 @@ def generate_shorts():
         # Extraction des segments
         segments = extract_shorts_timestamps(vtt_full_path, shorts_count, shorts_duration)
         logger.info(f"Segments extraits: {segments}")
+
+
 
         # Création des shorts
         shorts_info = []
