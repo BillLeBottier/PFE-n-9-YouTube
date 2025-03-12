@@ -9,29 +9,42 @@
 </head>
 <body>
     <div class="header">
+        <!-- Logo -->
         <div class="logo-container">
             <span class="logo-text">
                 <span class="logo-icon">🎬</span>
                 <span class="product-name">Subtitle<span class="accent">AI</span></span>
             </span>
         </div>
-
-        <!-- Formulaire de connexion -->
-        <div id="login-container">
-            <input type="email" id="email" placeholder="Email" required>
-            <input type="password" id="password" placeholder="Mot de passe" required>
-            <button onclick="login()">Se connecter</button>
+    
+        <!-- Barre de navigation -->
+        <nav class="navbar">
+            <ul>
+                <li><a href="#features">Fonctionnalités</a></li>
+                <li><a href="#downloads">Téléchargements</a></li>
+            </ul>
+        </nav>
+    
+        <!-- Menu utilisateur (connexion) -->
+        <div class="user-menu">
+            <div class="user-icon" onclick="toggleUserMenu()">
+                👤
+            </div>
+            <div class="dropdown-menu" id="dropdownMenu">
+                <input type="email" id="email" placeholder="Email" required>
+                <input type="password" id="password" placeholder="Mot de passe" required>
+                <button onclick="login()">Se connecter</button>
+            </div>
         </div>
-
+    
         <!-- Bouton Commencer -->
         <button class="start-btn" onclick="startProcess()">Commencer</button>
     </div>
-
     <div class="features">
         <!-- Sélection du fichier -->
         <div class="feature-card">
             <div class="feature-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
                     <polyline points="13 2 13 9 20 9"></polyline>
                 </svg>
@@ -48,7 +61,7 @@
         <!-- Options -->
         <div class="feature-card">
             <div class="feature-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="3"></circle>
                     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                 </svg>
@@ -83,7 +96,7 @@
                             <div class="style-preview-container">
                                 <div class="style-preview">
                                     <img src="/static/previews/shorts.png" alt="Style YouTube Shorts">
-                                    <div class="style-description">Style optimisé pour les formats courts, texte plus grand et centré</div>
+                                    <div class="style-description">Style optimisé pour les formats courts, texte plus grand avec contours</div>
                                 </div>
                             </div>
                         </div>
@@ -92,7 +105,7 @@
                             <div class="style-preview-container">
                                 <div class="style-preview">
                                     <img src="/static/previews/minimalist.png" alt="Style minimaliste">
-                                    <div class="style-description">Design épuré avec fond semi-transparent</div>
+                                    <div class="style-description">Design épuré sans contour</div>
                                 </div>
                             </div>
                         </div>
@@ -113,7 +126,7 @@
         <!-- Dans la carte des options avancées -->
         <div class="feature-card">
             <div class="feature-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="8" y1="6" x2="21" y2="6"></line>
                     <line x1="8" y1="12" x2="21" y2="12"></line>
                     <line x1="8" y1="18" x2="21" y2="18"></line>
@@ -134,45 +147,135 @@
                 </label>
             </div>
         </div>
-
-        <!-- Dans la carte des options avancées, après la checkbox generateShortsEnabled -->
-        <div id="shortsOptions" style="display: none; margin-top: 10px;">
-            <div style="margin-bottom: 10px;">
-                <label for="shortsCount">Nombre de shorts :</label>
-                <input type="number" id="shortsCount" min="1" max="10" value="3" style="width: 60px; margin-left: 10px; padding: 5px;">
-            </div>
-            <div>
-                <label for="shortsDuration">Durée des shorts (secondes) :</label>
-                <input type="number" id="shortsDuration" min="15" max="60" value="30" style="width: 60px; margin-left: 10px; padding: 5px;">
-            </div>
-        </div>
     </div>
 
+        <!-- Dans la carte des options avancées, après la checkbox generateShortsEnabled -->
+        <div id="shortsOptions" class="shorts-options" style="display: none;">
+            <!-- Nombre de shorts -->
+            <div class="shorts-option">
+                <div class="option-label">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    <span>Nombre de shorts</span>
+                </div>
+                <div class="option-input">
+                    <input type="number" id="shortsCount" min="1" max="10" value="3">
+                </div>
+            </div>
+        
+            <!-- Durée des shorts -->
+            <div class="shorts-option">
+                <div class="option-label">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    <span>Durée des shorts (secondes)</span>
+                </div>
+                <div class="option-input">
+                    <input type="number" id="shortsDuration" min="15" max="60" value="30">
+                </div>
+            </div>
+        </div>
+
     <!-- Prévisualisation vidéo -->
-    <div class="video-preview" id="videoPreviewContainer">
+    <div class="video-preview-container" id="videoPreviewContainer" style="display: none;">
         <h3>Prévisualisation</h3>
-        <video id="videoPreview" controls>
-            <source src="" type="video/mp4">
-            Votre navigateur ne supporte pas la lecture vidéo.
-        </video>
-        <div class="video-metadata" id="videoMetadata">
-            <span id="videoDuration"></span>
-            <span id="videoDimensions"></span>
-            <span id="videoSize"></span>
+        <div class="video-wrapper">
+            <video id="videoPreview" controls>
+                <source src="" type="video/mp4">
+                Votre navigateur ne supporte pas la lecture vidéo.
+            </video>
+        </div>
+        <div class="video-metadata">
+            <div class="metadata-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <span id="videoDuration">Durée: 0:00</span>
+            </div>
+            <div class="metadata-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="9" y1="3" x2="9" y2="21"></line>
+                </svg>
+                <span id="videoDimensions">Dimensions: 0x0</span>
+            </div>
+            <div class="metadata-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                <span id="videoSize">Taille: 0 MB</span>
+            </div>
         </div>
     </div>
 
     <!-- Barre de progression -->
     <div id="progressBarContainer" style="display: none;">
-        <div id="progressBar">
-            <div id="progressBarFill"></div>
+        <div class="progress-bar">
+            <div class="progress-bar-fill" id="progressBarFill"></div>
         </div>
-        <p id="progressText">0%</p>
+        <p class="progress-text" id="progressText">0%</p>
     </div>
+    
+    <!-- Notifications -->
+    <div id="notificationContainer"></div>
 
     <!-- Zone de téléchargement -->
-    <div id="downloadSection" style="display: none;">
-        <div id="downloadLink"></div>
+    <div id="downloadSection" class="download-section" style="display: none;">
+        <h3>Téléchargements</h3>
+        <div class="download-grid">
+            <!-- Bouton pour télécharger la vidéo -->
+            <div class="download-item">
+                <div class="download-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                </div>
+                <a href="#" class="download-button" download>
+                    Télécharger la vidéo
+                </a>
+                <p class="download-description">Vidéo sous-titrée au format MP4</p>
+            </div>
+    
+            <!-- Bouton pour télécharger les sous-titres -->
+            <div class="download-item">
+                <div class="download-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2">
+                        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                        <polyline points="13 2 13 9 20 9"></polyline>
+                    </svg>
+                </div>
+                <a href="#" class="download-button" download>
+                    Télécharger les sous-titres
+                </a>
+                <p class="download-description">Fichier VTT des sous-titres</p>
+            </div>
+    
+            <!-- Bouton pour télécharger le ZIP -->
+            <div class="download-item">
+                <div class="download-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                        <line x1="12" y1="11" x2="12" y2="17"></line>
+                        <line x1="9" y1="14" x2="15" y2="14"></line>
+                    </svg>
+                </div>
+                <a href="#" class="download-button" download>
+                    Télécharger le ZIP
+                </a>
+                <p class="download-description">Archive ZIP contenant tous les fichiers</p>
+            </div>
+        </div>
     </div>
 
    
@@ -222,13 +325,47 @@
     }
 
     function showNotification(message, type = 'info') {
+        const notificationContainer = document.getElementById('notificationContainer');
+    
+        // Créer la notification
         const notification = document.createElement('div');
-        notification.className = `notification ${type} show`;
-        notification.textContent = message;
-        document.body.appendChild(notification);
-        
+        notification.className = `notification ${type}`;
+    
+        // Ajouter une icône en fonction du type
+        let iconPath = '';
+        switch (type) {
+            case 'info':
+                iconPath = 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z';
+                break;
+            case 'error':
+                iconPath = 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z';
+                break;
+            case 'success':
+                iconPath = 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z';
+                break;
+        }
+
+        notification.innerHTML = `
+            <svg class="notification-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="${iconPath}"></path>
+            </svg>
+            <span>${message}</span>
+        `;
+
+        // Ajouter la notification au conteneur
+        notificationContainer.appendChild(notification);
+
+        // Afficher la notification
         setTimeout(() => {
-            notification.remove();
+            notification.classList.add('show');
+        }, 10);
+
+        // Masquer la notification après 3 secondes
+        setTimeout(() => {
+        notification.classList.remove('show');
+            setTimeout(() => {
+                notification.remove();
+            }, 300); // Temps pour l'animation de disparition
         }, 3000);
     }
 
@@ -297,6 +434,8 @@
         xhr.onload = function() {
             if (xhr.status === 200) {
                 const response = JSON.parse(xhr.responseText);
+                console.log("Réponse complète du serveur:", response); // Debug log
+
                 if (response.error) {
                     showNotification(response.error, 'error');
                 } else {
@@ -305,17 +444,26 @@
                     // Afficher les résultats
                     const downloadSection = document.getElementById('downloadSection');
                     downloadSection.style.display = 'block';
+
+                    // Si la génération de shorts est activée
+                    if (document.getElementById('generateShortsEnabled').checked) {
+                        // Extraire le nom du fichier avec timestamp de l'URL vidéo
+                        const videoFilename = response.video_url.split('/').pop().replace('_subtitled.mp4', '.mp4');
+                        console.log("Nom du fichier pour les shorts:", videoFilename);
+                        generateShorts(videoFilename, response.vtt_url);
+                    }
+                    
                     downloadSection.innerHTML = `
                         <a href="${response.video_url}" class="download-button" download>Télécharger la vidéo</a>
                         <a href="${response.vtt_url}" class="download-button" download>Télécharger le fichier .vtt</a>
                         
                         <form action="/generate_zip" method="POST">
-                            <input type="hidden" name="chapters" value="${response.chapters}">
+                            <input type="hidden" name="chapters" value="${response.chapters || ''}">
                             <input type="hidden" name="video_url" value="${response.video_url}">
                             <input type="hidden" name="vtt_url" value="${response.vtt_url}">
-                            <input type="hidden" name="summary" value="${response.summary}">
-                            <input type="hidden" name="personal_summary" value="${response.personal_summary}">
-                            <input type="hidden" name="keywords" value="${response.keywords}">
+                            <input type="hidden" name="summary" value="${response.summary || ''}">
+                            <input type="hidden" name="personal_summary" value="${response.personal_summary || ''}">
+                            <input type="hidden" name="keywords" value="${response.keywords || ''}">
                             <button type="submit" class="download-button">Télécharger le ZIP</button>
                         </form>
                         
@@ -339,11 +487,6 @@
                             </div>
                         ` : ''}
                     `;
-
-                    // Si la génération de shorts est activée, lancer la génération
-                    if (document.getElementById('generateShortsEnabled').checked) {
-                        generateShorts(response.video_url, response.vtt_url);
-                    }
                 }
             } else {
                 showNotification('Erreur lors du traitement', 'error');
@@ -356,12 +499,20 @@
         const statusInterval = setInterval(checkStatus, 1000);
     }
 
-    function generateShorts(videoUrl, vttUrl) {
+    function generateShorts(originalVideoFilename, vttUrl) {
         const formData = new FormData();
-        formData.append('video_path', videoUrl);
+        formData.append('original_video_filename', originalVideoFilename);
         formData.append('vtt_path', vttUrl);
         formData.append('shorts_count', document.getElementById('shortsCount').value);
         formData.append('shorts_duration', document.getElementById('shortsDuration').value);
+        formData.append('style', currentSelectedStyle);
+
+        console.log('Début de la génération des shorts avec:', {
+            originalVideoFilename,
+            vttUrl,
+            shortsCount: document.getElementById('shortsCount').value,
+            shortsDuration: document.getElementById('shortsDuration').value
+        });
 
         fetch('/generate_shorts', {
             method: 'POST',
@@ -372,19 +523,24 @@
             if (data.shorts) {
                 const shortsSection = document.createElement('div');
                 shortsSection.id = 'shortsSection';
+                
                 shortsSection.innerHTML = `
                     <h3>Shorts générés</h3>
                     <div class="shorts-container">
-                        ${data.shorts.map(short => `
-                            <div class="short-preview">
-                                <video controls width="320">
-                                    <source src="${short.url}" type="video/mp4">
-                                </video>
-                                <p>${short.description}</p>
-                                <p>Durée: ${short.start} - ${short.end}</p>
-                                <a href="${short.url}" download class="download-button">Télécharger</a>
-                            </div>
-                        `).join('')}
+                        <div class="short-card">
+                            ${data.shorts.map(short => `
+                                <div class="short-item">
+                                    <video controls class="short-preview">
+                                        <source src="${short.url}" type="video/mp4">
+                                    </video>
+                                    <div class="short-info">
+                                        <p>${short.description}</p>
+                                        <p>Durée: ${short.start} - ${short.end}</p>
+                                        <a href="${short.url}" download class="short-download-button">Télécharger</a>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
                 `;
                 document.getElementById('downloadSection').appendChild(shortsSection);
@@ -424,10 +580,12 @@
         }
     });
 
+
     // Ajouter ce script JavaScript
     document.getElementById('generateShortsEnabled').addEventListener('change', function() {
         document.getElementById('shortsOptions').style.display = this.checked ? 'block' : 'none';
     });
+
     </script>
 
     <!-- Ajout des scripts Firebase pour initialisation et authentification -->
@@ -486,6 +644,19 @@
                 console.error("Erreur d'envoi du token :", error);
             });
         }
+        function toggleUserMenu() {
+        const dropdownMenu = document.getElementById('dropdownMenu');
+        dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Fermer le menu si on clique ailleurs
+        document.addEventListener('click', function(e) {
+            const dropdownMenu = document.getElementById('dropdownMenu');
+            const userIcon = document.querySelector('.user-icon');
+            if (!userIcon.contains(e.target)) {
+                dropdownMenu.style.display = 'none';
+            }
+        });
     </script>
 
 </body>
