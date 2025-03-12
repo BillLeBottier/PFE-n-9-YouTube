@@ -259,6 +259,7 @@ def generate_chapters(video_path: str, vtt_path: str) -> str:
         raise
 
 
+
 #Résumé court
 
 def generate_summary(video_transcript: str) -> str:
@@ -499,11 +500,13 @@ def clean_output_folder():
     os.makedirs(OUTPUT_FOLDER)  # Le recrée vide
 
 
+
 def create_short(video_path: str, start_time: str, end_time: str, index: int) -> str:
     """
-    Crée un short au format vertical (1080x1920) sans bord noir.
+    Crée un short au format vertical (1080x1920) sans bord noir et avec sous-titres adaptés.
     """
     try:
+        temp_short_path = os.path.join(OUTPUT_FOLDER, f"temp_short_{index + 1}.mp4")
         output_filename = f"short_{index + 1}.mp4"
         output_path = os.path.join(OUTPUT_FOLDER, output_filename)
 
@@ -515,35 +518,84 @@ def create_short(video_path: str, start_time: str, end_time: str, index: int) ->
         video_aspect = width / height
 
         if video_aspect > target_aspect:
-            # La vidéo est trop large → on coupe sur les côtés
             new_width = int(height * target_aspect)
             crop_x = (width - new_width) // 2
             crop_filter = f"crop={new_width}:{height}:{crop_x}:0"
         else:
-            # La vidéo est trop haute → on coupe en haut et en bas
             new_height = int(width / target_aspect)
             crop_y = (height - new_height) // 2
             crop_filter = f"crop={width}:{new_height}:0:{crop_y}"
 
+        # Créer d'abord le short sans sous-titres
         command = [
             "ffmpeg",
-            "-i", video_path,              # Vidéo source
-            "-ss", start_time,             # Début du segment
-            "-to", end_time,               # Fin du segment
-            "-vf", crop_filter,            # Recadrage sans bord noir
+            "-i", video_path,
+            "-ss", start_time,
+            "-to", end_time,
+            "-vf", crop_filter,
             "-c:v", "libx264",
             "-preset", "slow",
             "-crf", "18",
-            "-c:a", "aac", "-b:a", "128k", # Audio optimisé
+            "-c:a", "aac", "-b:a", "128k",
+            temp_short_path
+        ]
+        subprocess.run(command, check=True)
+
+        # Extraire l'audio du short pour Whisper
+        audio_path = os.path.join(OUTPUT_FOLDER, f"temp_audio_{index + 1}.mp4")
+        command = [
+            "ffmpeg", "-i", temp_short_path,
+            "-vn", "-acodec", "copy",
+            audio_path
+        ]
+        subprocess.run(command, check=True)
+
+        # Transcription avec Whisper
+        with open(audio_path, "rb") as audio_file:
+            transcript = client.audio.transcriptions.create(
+                file=audio_file,
+                model="whisper-1",
+                language="fr",
+                response_format="vtt"
+            )
+
+        # Sauvegarder les sous-titres temporaires
+        temp_vtt_path = os.path.join(OUTPUT_FOLDER, f"temp_short_{index + 1}.vtt")
+        with open(temp_vtt_path, "w", encoding="utf-8") as vtt_file:
+            vtt_file.write(transcript)
+
+        # Ajouter les sous-titres au short avec style adapté
+        subtitle_filter = (
+            f"subtitles='{temp_vtt_path}':force_style='Fontsize=20,"  # Taille réduite de 24 à 20
+            "Fontname=Arial,Bold=1,PrimaryColour=&HFFFFFF&,"
+            "OutlineColour=&H000000&,Outline=2,Shadow=0,"
+            "Alignment=2,MarginV=30,LineSpacing=12,"  # Marge verticale réduite de 60 à 30
+            "TextMaxPixels=400'"  # Garde la même limite de largeur
+        )
+
+        command = [
+            "ffmpeg",
+            "-i", temp_short_path,
+            "-vf", subtitle_filter,
+            "-c:v", "libx264",
+            "-preset", "slow",
+            "-crf", "18",
+            "-c:a", "copy",
             output_path
         ]
-
         subprocess.run(command, check=True)
+
+        # Nettoyage des fichiers temporaires
+        os.remove(temp_short_path)
+        os.remove(audio_path)
+        os.remove(temp_vtt_path)
+
         return output_filename
 
     except Exception as e:
         logger.error(f"Erreur lors de la création du short: {str(e)}")
         raise
+
 
 
 @app.route('/')
@@ -566,14 +618,14 @@ def upload_file():
         if not file or file.filename == '':
             return jsonify({"error": "Aucun fichier sélectionné"}), 400
 
-        # Sécurisation du nom de fichier
+        # Sécurisation du nom de fichier avec timestamp
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename = secure_filename(f"{timestamp}_{file.filename}")
+        timestamped_filename = secure_filename(f"{timestamp}_{file.filename}")
         
-        # Sauvegarde temporaire
-        temp_path = os.path.join(TEMP_FOLDER, filename)
+        # Sauvegarde temporaire avec le nom horodaté
+        temp_path = os.path.join(TEMP_FOLDER, timestamped_filename)
         file.save(temp_path)
-        logger.info(f"Fichier sauvegardé: {temp_path}")
+        logger.info(f"Fichier sauvegardé avec timestamp: {timestamped_filename}")
 
         # Options
         language = request.form.get('language', 'fr')
@@ -626,15 +678,17 @@ def upload_file():
         video_url = url_for('serve_file', filename=os.path.basename(output_path))
         vtt_url = url_for('serve_file', filename=os.path.basename(vtt_path))
 
-        # Nettoyage
-        os.remove(temp_path)
+        # Ne pas supprimer le fichier temporaire si on doit générer des shorts
+        if not create_shorts:
+            os.remove(temp_path)
         
         process_status["progress"] = 100
 
-        # Retourner uniquement les données demandées
+        # Retourner le nom du fichier avec timestamp
         response_data = {
             "video_url": video_url,
-            "vtt_url": vtt_url
+            "vtt_url": vtt_url,
+            "original_filename": timestamped_filename  # Utiliser le nom avec timestamp
         }
 
         if create_chapters:
@@ -645,9 +699,12 @@ def upload_file():
                 "keywords": keywords
             })
 
+        logger.info(f"Nom du fichier renvoyé au frontend: {timestamped_filename}")
         return jsonify(response_data)
 
     except Exception as e:
+        if 'temp_path' in locals():
+            os.remove(temp_path)
         logger.error(f"Erreur: {str(e)}")
         process_status = {
             "progress": 0,
@@ -669,33 +726,57 @@ def get_status():
 def generate_shorts():
 
     try:
-        video_path = request.form.get('video_path')
+        # Récupérer les paramètres
+        original_filename = request.form.get('original_video_filename')
         vtt_path = request.form.get('vtt_path')
         shorts_count = int(request.form.get('shorts_count', 3))
         shorts_duration = int(request.form.get('shorts_duration', 30))
 
 
-        if not video_path or not vtt_path:
-            return jsonify({"error": "Chemins vidéo et VTT requis"}), 400
+        # Logs de debugging
+        logger.info(f"Paramètres reçus:")
+        logger.info(f"- original_filename: {original_filename}")
+        logger.info(f"- vtt_path: {vtt_path}")
+        logger.info(f"- shorts_count: {shorts_count}")
+        logger.info(f"- shorts_duration: {shorts_duration}")
 
-        # Chemin complet des fichiers
-        video_path = os.path.join(OUTPUT_FOLDER, os.path.basename(video_path))
-        vtt_path = os.path.join(OUTPUT_FOLDER, os.path.basename(vtt_path))
+        # Construire le chemin complet
+        original_video_path = os.path.join(TEMP_FOLDER, original_filename)
+        logger.info(f"Chemin complet de la vidéo: {original_video_path}")
+        logger.info(f"Le fichier existe? {os.path.exists(original_video_path)}")
 
+        if not os.path.exists(original_video_path):
+            error_msg = f"Vidéo originale non trouvée: {original_video_path}"
+            logger.error(error_msg)
+            return jsonify({"error": error_msg}), 400
 
-        # Extraction des segments avec les nouveaux paramètres
-        segments = extract_shorts_timestamps(vtt_path, shorts_count, shorts_duration)
+        # Vérifier que le fichier VTT existe aussi
+        vtt_full_path = os.path.join(OUTPUT_FOLDER, os.path.basename(vtt_path))
+        logger.info(f"Chemin complet du VTT: {vtt_full_path}")
+        logger.info(f"Le fichier VTT existe? {os.path.exists(vtt_full_path)}")
+
+        if not os.path.exists(vtt_full_path):
+            error_msg = f"Fichier VTT non trouvé: {vtt_full_path}"
+            logger.error(error_msg)
+            return jsonify({"error": error_msg}), 400
+
+        # Extraction des segments
+        segments = extract_shorts_timestamps(vtt_full_path, shorts_count, shorts_duration)
+        logger.info(f"Segments extraits: {segments}")
+
 
 
         # Création des shorts
         shorts_info = []
         for i, segment in enumerate(segments):
+            logger.info(f"Création du short {i+1}/{len(segments)}")
             output_filename = create_short(
-                video_path, 
-                segment['start'], 
-                segment['end'], 
+                original_video_path,
+                segment['start'],
+                segment['end'],
                 i
             )
+            logger.info(f"Short créé: {output_filename}")
             
             shorts_info.append({
                 'url': url_for('serve_file', filename=output_filename),
@@ -709,8 +790,10 @@ def generate_shorts():
         })
 
     except Exception as e:
-        logger.error(f"Erreur lors de la génération des shorts: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        error_msg = f"Erreur lors de la génération des shorts: {str(e)}"
+        logger.error(error_msg)
+        logger.exception(e)  # Ceci affichera le stack trace complet
+        return jsonify({"error": error_msg}), 500
     
 
 
