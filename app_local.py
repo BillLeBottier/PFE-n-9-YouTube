@@ -929,7 +929,15 @@ def generate_shorts():
         logger.exception(e)  # Ceci affichera le stack trace complet
         return jsonify({"error": error_msg}), 500
     
-
+@app.route('/features')
+def features():
+    """ Page des fonctionnalités de l'application """
+    return render_template('features.html')
+ 
+@app.route('/downloads')
+def downloads():
+    """ Page des téléchargements où l'utilisateur voit ses vidéos générées """
+    return render_template('downloads.html')
 
 @app.route('/generate_zip', methods=['POST'])
 def generate_zip():

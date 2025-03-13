@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fonctionnalités - SubtitleAI</title>
+    <!-- Lien vers une bibliothèque d'icônes (ex: FontAwesome) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_features.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="header">
+        <!-- Logo -->
+        <div class="logo-container">
+            <img src="{{ url_for('static', filename='logo_PFE.png') }}" alt="Logo PFE" class="logo-image">
+        </div>
+    
+        <!-- Barre de navigation -->
+        <nav class="navbar">
+            <ul>
+                <li><a href="{{ url_for('index') }}">Accueil</a></li>
+                <li><a href="{{ url_for('downloads') }}">Téléchargements</a></li>
+            </ul>
+        </nav>
+    
+        <!-- Menu utilisateur (connexion) -->
+        <div class="user-menu">
+            <div class="user-icon" onclick="toggleUserMenu()">
+                👤
+            </div>
+            <div class="dropdown-menu" id="dropdownMenu">
+                <input type="email" id="email" placeholder="Email" required>
+                <input type="password" id="password" placeholder="Mot de passe" required>
+                <button onclick="login()">Se connecter</button>
+            </div>
+        </div>
+    
+        <!-- Bouton Commencer -->
+        <button class="start-btn" onclick="startProcess()">Commencer</button>
+    </div>
+
+    <main>
+        <section id="features">
+            <h1>Fonctionnalités de SubtitleAI</h1>
+            <p class="subtitle">Découvrez comment SubtitleAI révolutionne la création de contenu vidéo.</p>
+
+            <!-- Section Importation de vidéo -->
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <i class="fas fa-video"></i> <!-- Icône pour l'importation de vidéo -->
+                </div>
+                <div class="feature-content">
+                    <h2>Importation de vidéo</h2>
+                    <p class="feature-description">
+                        SubtitleAI simplifie l'importation de vos vidéos. Que vous travailliez sur un projet professionnel ou une création personnelle, notre outil prend en charge <strong>tous les formats vidéo courants</strong> (MP4, AVI, MOV, MKV.) et s'adapte à vos besoins.
+                    </p>
+                    <ul class="feature-benefits">
+                        <li><i class="fas fa-check"></i> <strong>Rapide et intuitif</strong> : Glissez-déposez vos fichiers ou importez-les en un clic.</li>
+                        <li><i class="fas fa-check"></i> <strong>Compatibilité totale</strong> : Travaillez avec vos vidéos, quelle que soit leur résolution ou leur format.</li>
+                        <li><i class="fas fa-check"></i> <strong>Sécurité garantie</strong> : Vos fichiers restent privés et sont traités de manière sécurisée.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Section Sous-titres personnalisés -->
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <i class="fas fa-closed-captioning"></i> <!-- Icône pour les sous-titres -->
+                </div>
+                <div class="feature-content">
+                    <h2>Sous-titres personnalisés</h2>
+                    <p class="feature-description">
+                        SubtitleAI vous permet de générer des sous-titres <strong>dans la langue de votre choix</strong> et de les personnaliser pour qu'ils correspondent parfaitement à votre style. Que ce soit pour un projet professionnel ou une vidéo personnelle, nos outils de personnalisation sont intuitifs et puissants.
+                    </p>
+                    <ul class="feature-benefits">
+                        <li><i class="fas fa-check"></i> <strong>Multilingue</strong> : Supporte plus de 50 langues pour toucher un public international.</li>
+                        <li><i class="fas fa-check"></i> <strong>Personnalisation avancée</strong> : Choisissez la police, la couleur, la taille et la position des sous-titres.</li>
+                        <li><i class="fas fa-check"></i> <strong>Prévisualisation en temps réel</strong> : Voyez les modifications instantanément avant d'exporter.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Section Chapitrage YouTube -->
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <i class="fas fa-list-ol"></i> <!-- Icône pour le chapitrage -->
+                </div>
+                <div class="feature-content">
+                    <h2>Chapitrage YouTube</h2>
+                    <p class="feature-description">
+                        SubtitleAI génère automatiquement des <strong>chapitres pour vos vidéos YouTube</strong>, améliorant ainsi l'expérience de vos viewers. Grâce à notre outil, vous pouvez structurer vos vidéos en segments thématiques, rendant la navigation plus intuitive et professionnelle.
+                    </p>
+                    <ul class="feature-benefits">
+                        <li><i class="fas fa-check"></i> <strong>Automatisation intelligente</strong> : Détection automatique des segments clés de votre vidéo.</li>
+                        <li><i class="fas fa-check"></i> <strong>Personnalisation facile</strong> : Ajoutez ou modifiez les chapitres manuellement en quelques clics.</li>
+                        <li><i class="fas fa-check"></i> <strong>Optimisation pour YouTube</strong> : Exportez directement les chapitres au format compatible YouTube.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Section Description YouTube -->
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <i class="fas fa-align-left"></i> <!-- Icône pour la description -->
+                </div>
+                <div class="feature-content">
+                    <h2>Description YouTube</h2>
+                    <p class="feature-description">
+                        SubtitleAI vous aide à créer des <strong>descriptions YouTube optimisées</strong> pour maximiser la visibilité de vos vidéos. Grâce à notre outil, vous pouvez générer des descriptions riches en mots-clés, parfaitement adaptées aux algorithmes de YouTube.
+                    </p>
+                    <ul class="feature-benefits">
+                        <li><i class="fas fa-check"></i> <strong>Optimisation SEO</strong> : Intégrez automatiquement des mots-clés pertinents pour améliorer le référencement.</li>
+                        <li><i class="fas fa-check"></i> <strong>Personnalisation facile</strong> : Ajoutez des liens, des timestamps et des appels à l'action en un clic.</li>
+                        <li><i class="fas fa-check"></i> <strong>Modèles prédéfinis</strong> : Utilisez des templates professionnels pour gagner du temps.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Section Description pour le créateur -->
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <i class="fas fa-user-edit"></i> <!-- Icône pour la description créateur -->
+                </div>
+                <div class="feature-content">
+                    <h2>Description pour le créateur</h2>
+                    <p class="feature-description">
+                        SubtitleAI vous offre une <strong>analyse détaillée de votre vidéo</strong>, vous permettant de comprendre les points forts et les axes d'amélioration de votre contenu. Grâce à nos suggestions personnalisées, vous pouvez optimiser vos vidéos pour maximiser leur impact.
+                    </p>
+                    <ul class="feature-benefits">
+                        <li><i class="fas fa-check"></i> <strong>Analyse approfondie</strong> : Obtenez des insights sur la structure, le ton et la clarté de votre vidéo.</li>
+                        <li><i class="fas fa-check"></i> <strong>Suggestions personnalisées</strong> : Recevez des conseils pour améliorer l'engagement et la rétention de votre audience.</li>
+                        <li><i class="fas fa-check"></i> <strong>Rapports détaillés</strong> : Exportez des rapports PDF pour partager ou archiver vos analyses.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Section Mots-clés -->
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <i class="fas fa-key"></i> <!-- Icône pour les mots-clés -->
+                </div>
+                <div class="feature-content">
+                    <h2>Mots-clés optimisés</h2>
+                    <p class="feature-description">
+                        SubtitleAI génère des <strong>mots-clés pertinents et optimisés</strong> pour améliorer le référencement de vos vidéos sur YouTube et autres plateformes. Grâce à notre outil, vous pouvez maximiser la visibilité de votre contenu et attirer un public plus large.
+                    </p>
+                    <ul class="feature-benefits">
+                        <li><i class="fas fa-check"></i> <strong>Analyse intelligente</strong> : Détection automatique des mots-clés les plus pertinents pour votre contenu.</li>
+                        <li><i class="fas fa-check"></i> <strong>Optimisation SEO</strong> : Améliorez votre classement dans les résultats de recherche.</li>
+                        <li><i class="fas fa-check"></i> <strong>Suggestions en temps réel</strong> : Recevez des recommandations de mots-clés pendant que vous travaillez.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Section Génération de shorts -->
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <i class="fas fa-film"></i> <!-- Icône pour les shorts -->
+                </div>
+                <div class="feature-content">
+                    <h2>Génération de shorts</h2>
+                    <p class="feature-description">
+                        SubtitleAI vous permet de créer des <strong>shorts percutants</strong> à partir de vos vidéos existantes. Que ce soit pour promouvoir votre contenu sur les réseaux sociaux ou pour engager votre audience, notre outil vous offre un contrôle total sur la durée et le style de vos shorts.
+                    </p>
+                    <ul class="feature-benefits">
+                        <li><i class="fas fa-check"></i> <strong>Création rapide</strong> : Générez plusieurs shorts en quelques minutes.</li>
+                        <li><i class="fas fa-check"></i> <strong>Personnalisation flexible</strong> : Choisissez la durée et les segments de votre vidéo à inclure.</li>
+                        <li><i class="fas fa-check"></i> <strong>Prévisualisation instantanée</strong> : Visualisez vos shorts avant de les exporter.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Section Prévisualisation et téléchargement -->
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <i class="fas fa-download"></i> <!-- Icône pour le téléchargement -->
+                </div>
+                <div class="feature-content">
+                    <h2>Prévisualisation et téléchargement</h2>
+                    <p class="feature-description">
+                        SubtitleAI vous permet de <strong>prévisualiser vos vidéos sous-titrées, vos shorts et vos descriptions</strong> avant de les télécharger. Grâce à cette fonctionnalité, vous pouvez vous assurer que tout est parfait avant de partager ou de publier votre contenu.
+                    </p>
+                    <ul class="feature-benefits">
+                        <li><i class="fas fa-check"></i> <strong>Prévisualisation en temps réel</strong> : Visualisez vos modifications instantanément.</li>
+                        <li><i class="fas fa-check"></i> <strong>Téléchargement facile</strong> : Exportez vos fichiers en un clic dans les formats souhaités.</li>
+                        <li><i class="fas fa-check"></i> <strong>Compatibilité multiplateforme</strong> : Téléchargez vos fichiers pour YouTube, Instagram, TikTok et plus encore.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section Visuels (à ajouter) -->
+        <section id="visuals">
+            <div class="section-header">
+                <h2>Visuels et schémas</h2>
+                <p class="section-description">
+                    Découvrez comment SubtitleAI fonctionne à travers des exemples concrets et des illustrations claires. Voici quelques visuels qui montrent le flux de travail et les résultats générés par l'application.
+                </p>
+            </div>
+            <div class="visuals-grid">
+                <!-- Schéma du flux de travail -->
+                <div class="visual-item">
+                    <div class="visual-icon">
+                        <i class="fas fa-project-diagram"></i> <!-- Icône pour le schéma -->
+                    </div>
+                    <h3>Flux de travail</h3>
+                    <p>
+                        Un schéma montrant les étapes clés de l'application : <strong>importation</strong>, <strong>traitement</strong>, et <strong>exportation</strong>.
+                    </p>
+                    <div class="visual-image">
+                        <img src="static/FluxDeTravail.png" alt="Schéma du flux de travail">
+                    </div>
+                </div>
+        
+                <!-- Vidéo sous-titrée -->
+                <div class="visual-item">
+                    <div class="visual-icon">
+                        <i class="fas fa-closed-captioning"></i> <!-- Icône pour les sous-titres -->
+                    </div>
+                    <h3>Vidéo sous-titrée</h3>
+                    <p>
+                        Un exemple de vidéo avec des sous-titres générés automatiquement par l'application.
+                    </p>
+                    <div class="visual-image">
+                        <video controls>
+                            <source src="static/VideoTest.mp4" type="video/mp4">
+                            Votre navigateur ne supporte pas la lecture de vidéos.
+                        </video>
+                    </div>
+                </div>
+
+                <!-- Interface utilisateur -->
+                <div class="visual-item">
+                    <div class="visual-icon">
+                        <i class="fas fa-desktop"></i> <!-- Icône pour l'interface -->
+                    </div>
+                    <h3>Génération intelligente de shorts</h3>
+                    <p>
+                        Notre application vous propose des shorts de la durée séléctionnée, sous titré et prêt à l'emploi 
+                    </p>
+                    <div class="visual-image">
+                        <img src="static/capture-interface.png" alt="Capture d'écran de l'interface">
+                    </div>
+                </div>
+        
+                <!-- Description et chapitres YouTube -->
+                <div class="visual-item">
+                    <div class="visual-icon">
+                        <i class="fas fa-align-left"></i> <!-- Icône pour la description -->
+                    </div>
+                    <h3>Description et chapitres YouTube</h3>
+                    <p>
+                        Un exemple de description YouTube optimisée et de chapitres générés par SubtitleAI.
+                    </p>
+                    <div class="visual-image">
+                        <img src="static/exemple-description-chapitres.png" alt="Exemple de description et chapitres YouTube">
+                    </div>
+                </div>
+        </section>
+    </main>
+
+    <script>
+        function toggleUserMenu() {
+            const dropdownMenu = document.getElementById("dropdownMenu");
+                if (dropdownMenu.style.display === "block") {
+                    dropdownMenu.style.display = "none";
+                } else {
+                     dropdownMenu.style.display = "block";
+                }
+        }
+    </script>
+
+</body>
+</html>

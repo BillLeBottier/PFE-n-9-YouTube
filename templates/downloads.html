@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Téléchargement</title>
+    <!-- Lien vers une bibliothèque d'icônes (ex: FontAwesome) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_features.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="header">
+        <!-- Logo -->
+        <div class="logo-container">
+            <img src="{{ url_for('static', filename='logo_PFE.png') }}" alt="Logo PFE" class="logo-image">
+        </div>
+    
+        <!-- Barre de navigation -->
+        <nav class="navbar">
+            <ul>
+                <li><a href="{{ url_for('index') }}">Accueil</a></li>
+                <li><a href="{{ url_for('features') }}">Fonctionnalités</a></li>
+            </ul>
+        </nav>
+    
+        <!-- Menu utilisateur (connexion) -->
+        <div class="user-menu">
+            <div class="user-icon" onclick="toggleUserMenu()">
+                👤
+            </div>
+            <div class="dropdown-menu" id="dropdownMenu">
+                <input type="email" id="email" placeholder="Email" required>
+                <input type="password" id="password" placeholder="Mot de passe" required>
+                <button onclick="login()">Se connecter</button>
+            </div>
+        </div>
+    
+        <!-- Bouton Commencer -->
+        <button class="start-btn" onclick="startProcess()">Commencer</button>
+    </div>
+
+    <main>
+        <div class="downloads-grid">
+            <!-- Carte 1 -->
+            <div class="download-card">
+                <div class="video-thumbnail">
+                    <img src="static/video-thumbnail-1.jpg" alt="Miniature de la vidéo 1">
+                </div>
+                <div class="video-info">
+                    <h3 class="video-title">Titre de la vidéo 1</h3>
+                    <button class="download-btn" onclick="downloadVideo('video1.mp4')">
+                        <i class="fas fa-download"></i> Télécharger
+                    </button>
+                </div>
+            </div>
+    
+            <!-- Carte 2 -->
+            <div class="download-card">
+                <div class="video-thumbnail">
+                    <img src="static/video-thumbnail-2.jpg" alt="Miniature de la vidéo 2">
+                </div>
+                <div class="video-info">
+                    <h3 class="video-title">Titre de la vidéo 2</h3>
+                    <button class="download-btn" onclick="downloadVideo('video2.mp4')">
+                        <i class="fas fa-download"></i> Télécharger
+                    </button>
+                </div>
+            </div>
+    
+            <!-- Ajoute d'autres cartes ici -->
+        </div>
+    </main>
+
+    <script>
+        function toggleUserMenu() {
+            const dropdownMenu = document.getElementById("dropdownMenu");
+                if (dropdownMenu.style.display === "block") {
+                    dropdownMenu.style.display = "none";
+                } else {
+                     dropdownMenu.style.display = "block";
+                }
+        }
+    </script>
+    <script>
+        function downloadVideo(filename) {
+    const link = document.createElement('a');
+    link.href = `static/${filename}`;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+    </script>
+</body>
+</html>
