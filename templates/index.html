@@ -203,6 +203,21 @@
                     <input type="number" id="shortsDuration" min="15" max="60" value="30">
                 </div>
             </div>
+            
+            <!-- Nombre de mots par ligne pour les shorts -->
+            <div class="shorts-option">
+                <div class="option-label">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 7V4h16v3"></path>
+                        <path d="M9 20h6"></path>
+                        <path d="M12 4v16"></path>
+                    </svg>
+                    <span>Mots par ligne de sous-titre</span>
+                </div>
+                <div class="option-input">
+                    <input type="number" id="shortsWordLimit" min="1" max="10" value="4">
+                </div>
+            </div>
         </div>
 
     <!-- Prévisualisation vidéo -->
@@ -539,14 +554,20 @@
         formData.append('shorts_count', document.getElementById('shortsCount').value);
         formData.append('shorts_duration', document.getElementById('shortsDuration').value);
         formData.append('style', currentSelectedStyle);
+        
+        // Ajouter le paramètre word_limit
+        const shortsWordLimit = document.getElementById('shortsWordLimit').value;
+        if (shortsWordLimit && parseInt(shortsWordLimit) > 0) {
+            formData.append('word_limit', shortsWordLimit);
+        }
 
         console.log('Début de la génération des shorts avec:', {
             originalVideoFilename,
             vttUrl,
             shortsCount: document.getElementById('shortsCount').value,
-            shortsDuration: document.getElementById('shortsDuration').value
+            shortsDuration: document.getElementById('shortsDuration').value,
+            wordLimit: shortsWordLimit
         });
-
 
         fetch('/generate_shorts', {
             method: 'POST',
