@@ -606,9 +606,10 @@ def clean_output_folder():
 
 
 
-def create_short(video_path: str, start_time: str, end_time: str, index: int) -> str:
+def create_short(video_path: str, start_time: str, end_time: str, index: int, word_limit: int = None) -> str:
     """
     Crée un short au format vertical (1080x1920) sans bord noir et avec sous-titres adaptés.
+    Permet de limiter le nombre de mots par ligne de sous-titre si word_limit est spécifié.
     """
     try:
         temp_short_path = os.path.join(OUTPUT_FOLDER, f"temp_short_{index + 1}.mp4")
@@ -666,8 +667,16 @@ def create_short(video_path: str, start_time: str, end_time: str, index: int) ->
 
         # Sauvegarder les sous-titres temporaires
         temp_vtt_path = os.path.join(OUTPUT_FOLDER, f"temp_short_{index + 1}.vtt")
-        with open(temp_vtt_path, "w", encoding="utf-8") as vtt_file:
-            vtt_file.write(transcript)
+        
+        # Si word_limit est spécifié, segmenter les sous-titres
+        if word_limit and isinstance(word_limit, int) and word_limit > 0:
+            segmented_subtitles = segment_vtt(transcript, word_limit)
+            with open(temp_vtt_path, "w", encoding="utf-8") as vtt_file:
+                vtt_file.write(segmented_subtitles)
+            logger.info(f"✅ Sous-titres du short {index + 1} segmentés avec {word_limit} mots par ligne")
+        else:
+            with open(temp_vtt_path, "w", encoding="utf-8") as vtt_file:
+                vtt_file.write(transcript)
 
         # Ajouter les sous-titres au short avec style adapté
         subtitle_filter = (
@@ -854,21 +863,24 @@ def get_status():
 
 @app.route('/generate_shorts', methods=['POST'])
 def generate_shorts():
-
     try:
         # Récupérer les paramètres
         original_filename = request.form.get('original_video_filename')
         vtt_path = request.form.get('vtt_path')
         shorts_count = int(request.form.get('shorts_count', 3))
         shorts_duration = int(request.form.get('shorts_duration', 30))
-
-
+        
+        # Récupérer le paramètre word_limit
+        word_limit = request.form.get('word_limit')
+        word_limit = int(word_limit) if word_limit and word_limit.strip().isdigit() and int(word_limit) > 0 else None
+        
         # Logs de debugging
         logger.info(f"Paramètres reçus:")
         logger.info(f"- original_filename: {original_filename}")
         logger.info(f"- vtt_path: {vtt_path}")
         logger.info(f"- shorts_count: {shorts_count}")
         logger.info(f"- shorts_duration: {shorts_duration}")
+        logger.info(f"- word_limit: {word_limit}")
 
         # Construire le chemin complet
         original_video_path = os.path.join(TEMP_FOLDER, original_filename)
@@ -894,8 +906,6 @@ def generate_shorts():
         segments = extract_shorts_timestamps(vtt_full_path, shorts_count, shorts_duration)
         logger.info(f"Segments extraits: {segments}")
 
-
-
         # Création des shorts
         shorts_info = []
         for i, segment in enumerate(segments):
@@ -904,7 +914,8 @@ def generate_shorts():
                 original_video_path,
                 segment['start'],
                 segment['end'],
-                i
+                i,
+                word_limit=word_limit
             )
             logger.info(f"Short créé: {output_filename}")
             
