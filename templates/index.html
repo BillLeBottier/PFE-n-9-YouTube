@@ -459,6 +459,8 @@
         xhr.onload = function() {
             if (xhr.status === 200) {
                 const response = JSON.parse(xhr.responseText);
+                console.log("Réponse complète du serveur:", response); // Debug log
+
                 if (response.error) {
                     showNotification(response.error, 'error');
                 } else {
@@ -467,17 +469,26 @@
                     // Afficher les résultats
                     const downloadSection = document.getElementById('downloadSection');
                     downloadSection.style.display = 'block';
+
+                    // Si la génération de shorts est activée
+                    if (document.getElementById('generateShortsEnabled').checked) {
+                        // Extraire le nom du fichier avec timestamp de l'URL vidéo
+                        const videoFilename = response.video_url.split('/').pop().replace('_subtitled.mp4', '.mp4');
+                        console.log("Nom du fichier pour les shorts:", videoFilename);
+                        generateShorts(videoFilename, response.vtt_url);
+                    }
+                    
                     downloadSection.innerHTML = `
                         <a href="${response.video_url}" class="download-button" download>Télécharger la vidéo</a>
                         <a href="${response.vtt_url}" class="download-button" download>Télécharger le fichier .vtt</a>
                         
                         <form action="/generate_zip" method="POST">
-                            <input type="hidden" name="chapters" value="${response.chapters}">
+                            <input type="hidden" name="chapters" value="${response.chapters || ''}">
                             <input type="hidden" name="video_url" value="${response.video_url}">
                             <input type="hidden" name="vtt_url" value="${response.vtt_url}">
-                            <input type="hidden" name="summary" value="${response.summary}">
-                            <input type="hidden" name="personal_summary" value="${response.personal_summary}">
-                            <input type="hidden" name="keywords" value="${response.keywords}">
+                            <input type="hidden" name="summary" value="${response.summary || ''}">
+                            <input type="hidden" name="personal_summary" value="${response.personal_summary || ''}">
+                            <input type="hidden" name="keywords" value="${response.keywords || ''}">
                             <button type="submit" class="download-button">Télécharger le ZIP</button>
                         </form>
                         
@@ -501,11 +512,6 @@
                             </div>
                         ` : ''}
                     `;
-
-                    // Si la génération de shorts est activée, lancer la génération
-                    if (document.getElementById('generateShortsEnabled').checked) {
-                        generateShorts(response.video_url, response.vtt_url);
-                    }
                 }
             } else {
                 showNotification('Erreur lors du traitement', 'error');
@@ -525,13 +531,21 @@
         const statusInterval = setInterval(checkStatus, 1000);
     }
 
-    function generateShorts(videoUrl, vttUrl) {
+    function generateShorts(originalVideoFilename, vttUrl) {
         const formData = new FormData();
-        formData.append('video_path', videoUrl);
+        formData.append('original_video_filename', originalVideoFilename);
         formData.append('vtt_path', vttUrl);
 
         formData.append('shorts_count', document.getElementById('shortsCount').value);
         formData.append('shorts_duration', document.getElementById('shortsDuration').value);
+        formData.append('style', currentSelectedStyle);
+
+        console.log('Début de la génération des shorts avec:', {
+            originalVideoFilename,
+            vttUrl,
+            shortsCount: document.getElementById('shortsCount').value,
+            shortsDuration: document.getElementById('shortsDuration').value
+        });
 
 
         fetch('/generate_shorts', {
