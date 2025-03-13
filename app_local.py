@@ -56,7 +56,7 @@ process_status = {"progress": 0}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def transcribe_video(filepath, language):
+def transcribe_video(filepath, language, word_limit=None):
     try:
         # Extraction audio
         audio_path = filepath.rsplit('.', 1)[0] + "_audio.mp4"
@@ -76,10 +76,19 @@ def transcribe_video(filepath, language):
                 response_format="vtt"
             )
 
+        print(transcript)
+
         # Création du fichier VTT
         vtt_path = os.path.join(OUTPUT_FOLDER, "Sous-titres.vtt")
-        with open(vtt_path, "w", encoding="utf-8") as vtt_file:
-            vtt_file.write(transcript)
+        
+        # ✅ Si word_limit est défini, on segmente, sinon on garde la transcription telle quelle
+        if word_limit:
+            segmented_subtitles = segment_vtt(transcript, word_limit)
+            with open(vtt_path, "w", encoding="utf-8") as vtt_file:
+                vtt_file.write(segmented_subtitles)
+        else:
+            with open(vtt_path, "w", encoding="utf-8") as vtt_file:
+                vtt_file.write(transcript)
 
         # Nettoyage
         os.remove(audio_path)
@@ -88,6 +97,101 @@ def transcribe_video(filepath, language):
     except Exception as e:
         logger.error(f"Erreur lors de la transcription: {str(e)}")
         raise
+
+#Fonction si l'option est activé pour le nombre de mots/sous-titres
+
+def transcribe_video_with_limit(vtt_path, word_limit):
+    """Crée un fichier VTT segmenté en fonction du nombre de mots par sous-titre."""
+    with open(vtt_path, "r", encoding="utf-8") as f:
+        vtt_content = f.read()
+
+    segmented_subtitles = segment_vtt(vtt_content, word_limit)
+
+    vtt_custom_path = vtt_path.replace(".vtt", "_custom.vtt")
+    with open(vtt_custom_path, "w", encoding="utf-8") as vtt_file:
+        vtt_file.write(segmented_subtitles)
+
+    return vtt_custom_path
+
+#Fonction pour nombre de mots par sous-titres
+
+def parse_time(timestamp):
+    """Convertit un timestamp VTT en secondes (float). Gère les erreurs de format."""
+    try:
+        parts = re.split('[:.]', timestamp)
+        
+        if len(parts) == 4:  # Format attendu hh:mm:ss.sss
+            h, m, s, ms = parts
+        elif len(parts) == 3:  # Cas où il manque les millisecondes
+            h, m, s = parts
+            ms = "000"  # On met 000 par défaut
+        else:
+            raise ValueError(f"Format de timestamp invalide: {timestamp}")
+
+        return int(h) * 3600 + int(m) * 60 + int(s) + int(ms) / 1000
+    
+    except Exception as e:
+        logger.error(f"Erreur dans parse_time() avec {timestamp}: {e}")
+        return 0  # Retourne 0 en cas d'erreur
+
+
+def segment_vtt(vtt_content, word_limit):
+    """Fusionne tous les sous-titres, puis segmente en blocs de `word_limit` mots avec des timestamps alignés."""
+    
+    captions = webvtt.read_buffer(io.StringIO(vtt_content))
+    
+    # 🔄 Étape 1 : Fusionner tout le texte en une seule ligne et garder les timestamps
+    all_words = []
+    word_timestamps = []
+
+    for caption in captions:
+        words = caption.text.split()
+        if words:  # Ignorer les sous-titres vides
+            all_words.extend(words)
+            word_timestamps.extend([caption.start] * len(words))  # Associer chaque mot à son timestamp
+
+    # Vérification des tailles pour éviter les erreurs
+    if not all_words or not word_timestamps:
+        logger.error("❌ Erreur: Aucun texte ou timestamp trouvé.")
+        return "WEBVTT\n\n"
+
+    # 🔄 Étape 2 : Découper en segments de `word_limit` mots avec des timestamps valides
+    new_captions = []
+    previous_end_time = 0  # Initialiser l'heure de fin du dernier sous-titre
+
+    start_idx = 0
+    while start_idx < len(all_words):
+        chunk = all_words[start_idx:start_idx + word_limit]  # Prend `word_limit` mots
+        if not chunk:
+            break
+        
+        # 🔍 Déterminer le bon timestamp avec sécurité
+        start_time = parse_time(word_timestamps[start_idx])  # Timestamp du premier mot du segment
+        
+        # Si ce n'est pas le premier sous-titre, s'assurer qu'il commence après la fin du précédent
+        start_time = max(start_time, previous_end_time)
+
+        end_idx = min(len(word_timestamps) - 1, start_idx + word_limit - 1)  # Sécuriser l'accès
+        end_time = parse_time(word_timestamps[end_idx])  # Timestamp du dernier mot du segment
+
+        # 🚀 Correction : Éviter les sous-titres de 0 seconde
+        if end_time <= start_time:
+            end_time = start_time + 1.5  # Ajoute 1.5 secondes pour éviter une durée nulle
+
+        # 📝 Ajouter au fichier VTT
+        start_vtt_str = f"{int(start_time // 3600):02}:{int((start_time % 3600) // 60):02}:{int(start_time % 60):02}.{int((start_time % 1) * 1000):03}"
+        end_vtt_str = f"{int(end_time // 3600):02}:{int((end_time % 3600) // 60):02}:{int(end_time % 60):02}.{int((end_time % 1) * 1000):03}"
+
+        new_captions.append(f"{start_vtt_str} --> {end_vtt_str}\n{' '.join(chunk)}\n")
+
+        # 🔄 Mise à jour de `previous_end_time` pour que la prochaine ligne commence après la fin de celle-ci
+        previous_end_time = end_time
+
+        start_idx += word_limit  # Avancer au prochain segment
+
+    logger.info(f"✅ Segmentation stricte en blocs de {word_limit} mots effectuée")
+    return "WEBVTT\n\n" + "\n".join(new_captions)
+
 
 #Convertir fichier vtt en .ass pour sous-titres dynamiques
 
@@ -155,6 +259,7 @@ def convert_vtt_to_ass(vtt_path, ass_path):
 
 def add_subtitles_to_video(video_path, vtt_path, style):
     
+    logger.info(f"🎬 Sous-titres ajoutés à la vidéo: {vtt_path}")
     output_path = os.path.join(OUTPUT_FOLDER, os.path.basename(video_path).rsplit('.', 1)[0] + "_subtitled.mp4")
 
     ass_path = vtt_path.replace(".vtt", ".ass")
@@ -580,10 +685,24 @@ def upload_file():
         style = request.form.get('style', 'default')
         create_chapters = request.form.get('createChapters') == 'true'
         create_shorts = request.form.get('createShorts') == 'true'
+        
+        # ✅ Correction : Vérifier que word_limit n'est pas vide avant de le convertir
+        word_limit = request.form.get('wordLimit')
+        word_limit = int(word_limit) if word_limit and word_limit.strip().isdigit() and int(word_limit) > 0 else None
 
         # Transcription (toujours nécessaire)
         process_status["progress"] = 30
-        vtt_path = transcribe_video(temp_path, language)
+        vtt_path = transcribe_video(temp_path, language)  # Fichier VTT original (toujours utilisé)
+
+        # ✅ Toujours créer un fichier custom, mais s'il n'y a pas d'option, on copie le VTT normal
+        vtt_custom_path = None  # Ne pas créer `Sous-titres_custom.vtt` par défaut
+
+        if isinstance(word_limit, int) and word_limit > 0:
+            vtt_custom_path = transcribe_video_with_limit(vtt_path, word_limit)
+            logger.info(f"✅ Fichier sous-titres personnalisé généré: {vtt_custom_path}")
+        else:
+            vtt_custom_path = None  # Assurer que le fichier custom n'est PAS utilisé
+
         logger.info("Transcription terminée")
 
         # Extraire le texte brut du fichier VTT
@@ -619,7 +738,17 @@ def upload_file():
 
         # Ajout des sous-titres
         process_status["progress"] = 60
-        output_path = add_subtitles_to_video(temp_path, vtt_path, style)
+
+        # ✅ Utiliser `Sous-titres.vtt` si l'utilisateur ne coche pas l'option, sinon `Sous-titres_custom.vtt`
+        if vtt_custom_path:
+            final_vtt_path = vtt_custom_path
+            logger.info("📌 Utilisation du fichier VTT custom (option activée).")
+        else:
+            final_vtt_path = vtt_path
+            logger.info("📌 Utilisation du fichier VTT normal (option désactivée).")
+
+        output_path = add_subtitles_to_video(temp_path, final_vtt_path, style)
+
         logger.info("Sous-titres ajoutés")
 
         # Génération des URLs locales
@@ -654,6 +783,7 @@ def upload_file():
             "error": f"Erreur: {str(e)}"
         }
         return jsonify(process_status), 500
+
 
 @app.route('/files/<filename>')
 def serve_file(filename):

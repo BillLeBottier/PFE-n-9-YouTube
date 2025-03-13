@@ -147,6 +147,31 @@
                 </label>
             </div>
         </div>
+
+        <!-- Option pour nombre de mot par sous-titres -->
+
+        <div class="feature-card">
+            <div class="feature-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="8" y1="6" x2="21" y2="6"></line>
+                    <line x1="8" y1="12" x2="21" y2="12"></line>
+                    <line x1="8" y1="18" x2="21" y2="18"></line>
+                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                </svg>
+            </div>
+            <h3 class="feature-title">Longueur des sous-titres</h3>
+            <label class="checkbox-wrapper">
+                <input type="checkbox" id="enableWordLimit">
+                <span>Personnaliser le nombre de mots par sous-titre</span>
+            </label>
+            <div class="feature-content" id="wordLimitContainer" style="display: none;">
+                <label for="wordLimit">Nombre de mots par sous-titre :</label>
+                <input type="number" id="wordLimit" name="wordLimit" min="1" max="20" disabled>
+            </div>
+        </div>
+
     </div>
 
         <!-- Dans la carte des options avancées, après la checkbox generateShortsEnabled -->
@@ -489,6 +514,13 @@
             document.getElementById('progressBarContainer').style.display = 'block';
         };
 
+        //  Ajout du nombre de mots par sous-titre
+        if (document.getElementById('enableWordLimit').checked) {
+            formData.append('wordLimit', document.getElementById('wordLimit').value);
+        }
+
+        formData.append('wordLimit', document.getElementById('wordLimit').value);
+
         xhr.send(formData);
         const statusInterval = setInterval(checkStatus, 1000);
     }
@@ -645,7 +677,20 @@
                 dropdownMenu.style.display = 'none';
             }
         });
-    </script>
 
+        document.getElementById("enableWordLimit").addEventListener("change", function() {
+            let wordLimitInput = document.getElementById("wordLimit");
+            let container = document.getElementById("wordLimitContainer");
+
+            if (this.checked) {
+                wordLimitInput.disabled = false;
+                container.style.display = "block";
+            } else {
+                wordLimitInput.disabled = true;
+                container.style.display = "none";
+                wordLimitInput.value = "";  // Supprime la valeur pour ne pas envoyer "5"
+            }
+        });
+    </script>
 </body>
 </html>
