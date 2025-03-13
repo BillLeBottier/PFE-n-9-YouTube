@@ -1118,3 +1118,91 @@ p {
     margin-left: 50px; /* Augmentez la marge à gauche pour le déplacer un peu plus à droite */
 
 }
+
+/* Styles pour les onglets de résultats */
+.results-container {
+    margin-top: 30px;
+    background-color: #2a2a2a;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.results-tabs {
+    display: flex;
+    background-color: #333;
+    border-bottom: 1px solid #444;
+}
+
+.tab-button {
+    padding: 12px 20px;
+    background-color: transparent;
+    border: none;
+    color: #ccc;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.tab-button:hover {
+    background-color: rgba(124, 58, 237, 0.2);
+    color: #fff;
+}
+
+.tab-button.active {
+    background-color: #7c3aed;
+    color: white;
+}
+
+.tab-content {
+    padding: 20px;
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+    animation: fadeIn 0.5s ease;
+}
+
+.content-box {
+    background-color: #333;
+    border-radius: 8px;
+    padding: 15px;
+    color: #fff;
+    line-height: 1.6;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+pre.content-box {
+    font-family: 'Courier New', monospace;
+    white-space: pre-wrap;
+}
+
+.keywords-box {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.keyword {
+    background-color: #7c3aed;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 14px;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
