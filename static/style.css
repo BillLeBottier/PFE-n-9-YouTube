@@ -1105,3 +1105,14 @@ p {
     }
 }
 
+.logo-container {
+    display: flex;
+    align-items: center; /* Centre verticalement le logo */
+    margin-right: auto; /* Pousse le logo à gauche */
+}
+
+.logo-image {
+    height: 50px; /* Augmentez la hauteur à 50px (ou la valeur souhaitée) */
+    width: auto; /* Garde les proportions de l'image */
+    margin-left: 40px; /* Augmentez la marge à gauche pour le déplacer un peu plus à droite */
+}
