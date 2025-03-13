@@ -150,12 +150,8 @@
         <div class="feature-card">
             <div class="feature-icon">
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="8" y1="6" x2="21" y2="6"></line>
-                    <line x1="8" y1="12" x2="21" y2="12"></line>
-                    <line x1="8" y1="18" x2="21" y2="18"></line>
-                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
-                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
-                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
                 </svg>
             </div>
             <h3 class="feature-title">Longueur des sous-titres</h3>
@@ -163,13 +159,26 @@
                 <input type="checkbox" id="enableWordLimit">
                 <span>Personnaliser le nombre de mots par sous-titre</span>
             </label>
-            <div class="feature-content" id="wordLimitContainer" style="display: none;">
-                <label for="wordLimit">Nombre de mots par sous-titre :</label>
-                <input type="number" id="wordLimit" name="wordLimit" min="1" max="20" disabled>
-            </div>
         </div>
 
     </div>
+
+        <!-- Options pour le nombre de mots par sous-titre -->
+        <div id="wordLimitOptions" class="shorts-options" style="display: none;">
+            <!-- Nombre de mots par sous-titre -->
+            <div class="shorts-option">
+                <div class="option-label">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                    </svg>
+                    <span>Nombre de mots par sous-titre</span>
+                </div>
+                <div class="option-input">
+                    <input type="number" id="wordLimitValue" min="1" max="20" value="5">
+                </div>
+            </div>
+        </div>
 
         <!-- Dans la carte des options avancées, après la checkbox generateShortsEnabled -->
         <div id="shortsOptions" class="shorts-options" style="display: none;">
@@ -534,10 +543,8 @@
 
         //  Ajout du nombre de mots par sous-titre
         if (document.getElementById('enableWordLimit').checked) {
-            formData.append('wordLimit', document.getElementById('wordLimit').value);
+            formData.append('wordLimit', document.getElementById('wordLimitValue').value);
         }
-
-        formData.append('wordLimit', document.getElementById('wordLimit').value);
 
         xhr.send(formData);
         const statusInterval = setInterval(checkStatus, 1000);
@@ -638,6 +645,21 @@
         document.getElementById('shortsOptions').style.display = this.checked ? 'block' : 'none';
     });
 
+    // Ajouter l'événement pour afficher les options de limite de mots
+    document.getElementById('enableWordLimit').addEventListener('change', function() {
+        let optionsContainer = document.getElementById('wordLimitOptions');
+
+        if (this.checked) {
+            optionsContainer.style.display = 'block';
+        } else {
+            optionsContainer.style.display = 'none';
+        }
+    });
+
+    // Synchroniser les valeurs entre les deux inputs de limite de mots
+    document.getElementById('wordLimitValue').addEventListener('input', function() {
+        // Garde uniquement la synchronisation avec le backend
+    });
     </script>
 
     <!-- Ajout des scripts Firebase pour initialisation et authentification -->
@@ -707,20 +729,6 @@
             const userIcon = document.querySelector('.user-icon');
             if (!userIcon.contains(e.target)) {
                 dropdownMenu.style.display = 'none';
-            }
-        });
-
-        document.getElementById("enableWordLimit").addEventListener("change", function() {
-            let wordLimitInput = document.getElementById("wordLimit");
-            let container = document.getElementById("wordLimitContainer");
-
-            if (this.checked) {
-                wordLimitInput.disabled = false;
-                container.style.display = "block";
-            } else {
-                wordLimitInput.disabled = true;
-                container.style.display = "none";
-                wordLimitInput.value = "";  // Supprime la valeur pour ne pas envoyer "5"
             }
         });
     </script>

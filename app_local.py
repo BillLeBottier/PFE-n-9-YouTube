@@ -56,7 +56,7 @@ process_status = {"progress": 0}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def transcribe_video(filepath, language, word_limit=None):
+def transcribe_video(filepath, language, word_limit=None, min_duration=1.0):
     try:
         # Extraction audio
         audio_path = filepath.rsplit('.', 1)[0] + "_audio.mp4"
@@ -83,7 +83,7 @@ def transcribe_video(filepath, language, word_limit=None):
         
         # ✅ Si word_limit est défini, on segmente, sinon on garde la transcription telle quelle
         if word_limit:
-            segmented_subtitles = segment_vtt(transcript, word_limit)
+            segmented_subtitles = segment_vtt(transcript, word_limit, min_duration)
             with open(vtt_path, "w", encoding="utf-8") as vtt_file:
                 vtt_file.write(segmented_subtitles)
         else:
@@ -135,7 +135,7 @@ def parse_time(timestamp):
         return 0  # Retourne 0 en cas d'erreur
 
 
-def segment_vtt(vtt_content, word_limit):
+def segment_vtt(vtt_content, word_limit, min_duration=1.0):
     """Fusionne tous les sous-titres, puis segmente en blocs de `word_limit` mots avec des timestamps alignés."""
     
     captions = webvtt.read_buffer(io.StringIO(vtt_content))
@@ -174,9 +174,9 @@ def segment_vtt(vtt_content, word_limit):
         end_idx = min(len(word_timestamps) - 1, start_idx + word_limit - 1)  # Sécuriser l'accès
         end_time = parse_time(word_timestamps[end_idx])  # Timestamp du dernier mot du segment
 
-        # 🚀 Correction : Éviter les sous-titres de 0 seconde
-        if end_time <= start_time:
-            end_time = start_time + 1.5  # Ajoute 1.5 secondes pour éviter une durée nulle
+        # 🚀 Correction : Éviter les sous-titres de durée trop courte
+        if end_time - start_time < float(min_duration):
+            end_time = start_time + float(min_duration)  # Ajoute la durée minimale spécifiée
 
         # 📝 Ajouter au fichier VTT
         start_vtt_str = f"{int(start_time // 3600):02}:{int((start_time % 3600) // 60):02}:{int(start_time % 60):02}.{int((start_time % 1) * 1000):03}"
@@ -750,19 +750,16 @@ def upload_file():
         # ✅ Correction : Vérifier que word_limit n'est pas vide avant de le convertir
         word_limit = request.form.get('wordLimit')
         word_limit = int(word_limit) if word_limit and word_limit.strip().isdigit() and int(word_limit) > 0 else None
+        
+        # Valeur par défaut pour la durée minimale des sous-titres
+        min_sub_duration = 1.0
 
         # Transcription (toujours nécessaire)
         process_status["progress"] = 30
-        vtt_path = transcribe_video(temp_path, language)  # Fichier VTT original (toujours utilisé)
+        vtt_path = transcribe_video(temp_path, language, word_limit, min_sub_duration)  # Fichier VTT original (toujours utilisé)
 
         # ✅ Toujours créer un fichier custom, mais s'il n'y a pas d'option, on copie le VTT normal
         vtt_custom_path = None  # Ne pas créer `Sous-titres_custom.vtt` par défaut
-
-        if isinstance(word_limit, int) and word_limit > 0:
-            vtt_custom_path = transcribe_video_with_limit(vtt_path, word_limit)
-            logger.info(f"✅ Fichier sous-titres personnalisé généré: {vtt_custom_path}")
-        else:
-            vtt_custom_path = None  # Assurer que le fichier custom n'est PAS utilisé
 
         logger.info("Transcription terminée")
 
@@ -800,13 +797,9 @@ def upload_file():
         # Ajout des sous-titres
         process_status["progress"] = 60
 
-        # ✅ Utiliser `Sous-titres.vtt` si l'utilisateur ne coche pas l'option, sinon `Sous-titres_custom.vtt`
-        if vtt_custom_path:
-            final_vtt_path = vtt_custom_path
-            logger.info("📌 Utilisation du fichier VTT custom (option activée).")
-        else:
-            final_vtt_path = vtt_path
-            logger.info("📌 Utilisation du fichier VTT normal (option désactivée).")
+        # ✅ Utiliser le fichier VTT généré
+        final_vtt_path = vtt_path
+        logger.info("📌 Utilisation du fichier VTT généré.")
 
         output_path = add_subtitles_to_video(temp_path, final_vtt_path, style)
 
@@ -848,7 +841,7 @@ def upload_file():
             "progress": 0,
             "error": f"Erreur: {str(e)}"
         }
-        return jsonify(process_status), 500
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route('/files/<filename>')
