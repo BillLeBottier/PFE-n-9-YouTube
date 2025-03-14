@@ -33,9 +33,6 @@
                 <button onclick="login()">Se connecter</button>
             </div>
         </div>
-    
-        <!-- Bouton Commencer -->
-        <button class="start-btn" onclick="startProcess()">Commencer</button>
     </div>
     <div class="features">
         <!-- Sélection du fichier -->
@@ -443,6 +440,11 @@
             return;
         }
 
+        // Désactiver le bouton START et ajouter l'animation
+        const startButton = document.querySelector('.start-btn');
+        startButton.classList.add('processing');
+        startButton.disabled = true;
+        
         const formData = new FormData();
         formData.append('file', file);
         formData.append('language', document.getElementById('languageSelect').value);
@@ -478,6 +480,10 @@
         };
 
         xhr.onload = function() {
+            // Réactiver le bouton START et supprimer l'animation
+            startButton.classList.remove('processing');
+            startButton.disabled = false;
+            
             if (xhr.status === 200) {
                 const response = JSON.parse(xhr.responseText);
                 console.log("Réponse complète du serveur:", response); // Debug log
@@ -643,6 +649,16 @@
 
         xhr.send(formData);
         const statusInterval = setInterval(checkStatus, 1000);
+        
+        // Ajouter un gestionnaire d'erreur pour réactiver le bouton en cas d'échec
+        xhr.onerror = function() {
+            // Réactiver le bouton START et supprimer l'animation
+            startButton.classList.remove('processing');
+            startButton.disabled = false;
+            showNotification('Erreur de connexion au serveur', 'error');
+            uploadProgress.remove();
+            clearInterval(statusInterval);
+        };
     }
 
     function generateShorts(originalVideoFilename, vttUrl) {
@@ -827,5 +843,10 @@
             }
         });
     </script>
+    
+    <!-- Bouton START en bas de page -->
+    <div class="bottom-button-container">
+        <button class="start-btn" onclick="startProcess()">START</button>
+    </div>
 </body>
 </html>
