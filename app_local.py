@@ -339,13 +339,14 @@ def generate_chapters(video_path: str, vtt_path: str) -> str:
         Format exact requis : 'HH:MM:SS Titre du chapitre'.
         Maximum 6 à 8 chapitres bien répartis sur la durée de la vidéo.
         Le premier chapitre doit toujours être à '00:00:00 Introduction'.
+        Le dernier chapitre doit toujours être avant le dernier timestamp
 
         Les titres des chapitres doivent être :
         Courts (3 à 6 mots maximum).
         Descriptifs et informatifs.
         En français courant, sans jargon technique inutile.
         Accrocheurs pour inciter les spectateurs à cliquer sur le chapitre.
-        Assure-toi qu'il y ait au moins 2 minutes entre chaque chapitre pour éviter les chevauchements.
+        
 
         Les chapitres doivent être placés à des moments clés de la vidéo, comme les transitions entre les sujets, les démonstrations, ou les conclusions.
 
@@ -447,6 +448,8 @@ def generate_personal_summary(video_transcript: str) -> str:
         Structure le résumé en points clés, avec une phrase d'introduction et une conclusion.
         Chaque point clé doit correspondre à une section ou une idée principale de la vidéo.
         Inclus des détails spécifiques mentionnés dans la vidéo, comme des chiffres, des exemples, ou des citations importantes.
+
+       
 
         Le résumé doit tenir en 8 à 10 lignes maximum, tout en couvrant tous les points clés de la vidéo.
 
@@ -990,20 +993,7 @@ def generate_shorts():
         return jsonify({"error": error_msg}), 500
     
 
-@app.route('/get-description', methods=['POST'])
-def get_description():
-    # Récupère la transcription de la vidéo (exemple)
-    video_transcript = request.form.get('video_transcript')
 
-    # Génère la description (exemple)
-    description = generate_youtube_description(video_transcript)  # Remplace par ta logique
-
-    # Remplace les sauts de ligne par <br>
-    description = description.replace("\n", "<br>")
-
-    # Retourne la description au frontend
-    return jsonify({"description": description})
-    
 @app.route('/features')
 def features():
     """ Page des fonctionnalités de l'application """
