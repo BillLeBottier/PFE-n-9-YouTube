@@ -35,9 +35,6 @@
                 <button onclick="login()">Se connecter</button>
             </div>
         </div>
-    
-        <!-- Bouton Commencer -->
-        <button class="start-btn" onclick="startProcess()">Commencer</button>
     </div>
 
     <main>
@@ -74,23 +71,31 @@
 
     <script>
         function toggleUserMenu() {
-            const dropdownMenu = document.getElementById("dropdownMenu");
-                if (dropdownMenu.style.display === "block") {
-                    dropdownMenu.style.display = "none";
-                } else {
-                     dropdownMenu.style.display = "block";
-                }
+            const dropdownMenu = document.getElementById('dropdownMenu');
+            dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function login() {
+            // Logique de connexion
+            alert('Fonctionnalité de connexion à implémenter');
+        }
+
+        function startProcess() {
+            // Désactiver le bouton START et ajouter l'animation
+            const startButton = document.querySelector('.start-btn');
+            startButton.classList.add('processing');
+            startButton.disabled = true;
+            
+            // Rediriger vers la page d'accueil pour commencer le processus
+            setTimeout(function() {
+                window.location.href = "{{ url_for('index') }}";
+            }, 1000); // Délai d'une seconde pour montrer l'animation
         }
     </script>
-    <script>
-        function downloadVideo(filename) {
-    const link = document.createElement('a');
-    link.href = `static/${filename}`;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-    </script>
+    
+    <!-- Bouton START en bas de page -->
+    <div class="bottom-button-container">
+        <button class="start-btn" onclick="startProcess()">START</button>
+    </div>
 </body>
 </html>
