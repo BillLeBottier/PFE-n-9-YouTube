@@ -582,12 +582,12 @@
                                     
                                     <div id="summaryTab" class="tab-pane">
                                         <h3>Résumé global</h3>
-                                        <div class="content-box">${response.summary}</div>
+                                        <div class="content-box">${response.summary.replace(/\n/g, "<br>")}</div>
                                     </div>
                                     
                                     <div id="personalSummaryTab" class="tab-pane">
                                         <h3>Résumé à la première personne</h3>
-                                        <div class="content-box">${response.personal_summary}</div>
+                                        <div class="content-box">${response.personal_summary.replace(/\n/g, "<br>")}</div>
                                     </div>
                                     
                                     <div id="keywordsTab" class="tab-pane">

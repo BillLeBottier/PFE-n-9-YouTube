@@ -277,7 +277,7 @@ def add_subtitles_to_video(video_path, vtt_path, style):
         subtitle_filter = (
             f"subtitles='{vtt_path}':force_style='Fontsize=16,"
             "Fontname=Helvetica,Bold=0,PrimaryColour=&HFFFFFF&,"
-            "OutlineColour=&H000000&,Outline=0,Shadow=0,"
+            "OutlineColour=&H000000&,Outline=0,Shadow=1,"
             "Alignment=2,MarginV=30'"
         )
 
@@ -329,21 +329,36 @@ def generate_chapters(video_path: str, vtt_path: str) -> str:
 
         # Prompt pour GPT avec le contenu VTT
         prompt = f"""
-        Analyse ce fichier de sous-titres au format VTT et crée des chapitres pertinents en FRANCAIS.
+        Analyse ce fichier de sous-titres au format VTT et crée des chapitres pertinents en FRANCAIS 
+        pour une vidéo YouTube. Les chapitres doivent aider les spectateurs à naviguer facilement dans 
+        la vidéo et à comprendre sa structure.
         Le fichier contient déjà les timestamps exacts, utilise-les pour créer des chapitres cohérents.
 
         Règles pour les chapitres :
-        - Utilise les timestamps existants du VTT
-        - Format exact requis: "HH:MM:SS Titre du chapitre"  
-        - Maximum 6-8 chapitres bien répartis sur la durée de la vidéo
-        - Premier chapitre toujours à 0:00 Introduction
-        - Titres courts et descriptifs (3-6 mots)
-        - Un chapitre par ligne
+        Utilise les timestamps existants du VTT pour créer des chapitres cohérents.
+        Format exact requis : 'HH:MM:SS Titre du chapitre'.
+        Maximum 6 à 8 chapitres bien répartis sur la durée de la vidéo.
+        Le premier chapitre doit toujours être à '00:00:00 Introduction'.
+
+        Les titres des chapitres doivent être :
+        Courts (3 à 6 mots maximum).
+        Descriptifs et informatifs.
+        En français courant, sans jargon technique inutile.
+        Accrocheurs pour inciter les spectateurs à cliquer sur le chapitre.
+        Assure-toi qu'il y ait au moins 2 minutes entre chaque chapitre pour éviter les chevauchements.
+
+        Les chapitres doivent être placés à des moments clés de la vidéo, comme les transitions entre les sujets, les démonstrations, ou les conclusions.
+
+        Les chapitres doivent refléter fidèlement le contenu de la vidéo. Évite de créer des chapitres qui ne correspondent pas au sujet traité.
 
         Contenu VTT :
         {vtt_content}
 
-        Retourne uniquement les chapitres en FRANCAIS, un par ligne, sans texte supplémentaire.
+        Retourne uniquement les chapitres en FRANCAIS, un par ligne, sans texte supplémentaire. 
+        Assure-toi que le format est strictement respecté : 
+        'HH:MM:SS Titre du chapitre'. 
+        Si tu détectes des problèmes dans le fichier VTT (comme des timestamps manquants ou incohérents), 
+        signale-le avant de générer les chapitres.
         """
 
         response = client.chat.completions.create(
@@ -374,8 +389,22 @@ def generate_summary(video_transcript: str) -> str:
     try:
         # Créer le prompt pour générer un résumé global
         prompt = f"""
-        Voici la transcription d'une vidéo. Résume-la en 5 à 10 lignes. 
-        Reste concis et clair, en couvrant les points principaux de la vidéo.
+        Tu es un expert en rédaction de descriptions YouTube. Analyse la transcription de cette vidéo et rédige une description optimisée pour YouTube en FRANCAIS.
+        La description doit être concise, engageante, et inclure des mots-clés pertinents pour améliorer le référencement et le SEO.
+
+        Règles pour la description :
+        N'utilise aucun formatage Markdown (comme les astérisques pour le gras).
+        Une seule ligne vide entre chaque section.
+        Fait des sauts à la ligne inteligent et que tu codera par <br>
+
+        Structure de la description :
+        Introduction accrocheuse (1-2 lignes) : Résume l'essentiel de la vidéo de manière engageante. Utilise des phrases courtes et percutantes.
+        Détails du contenu (3-5 lignes) : Décris les points clés de la vidéo en utilisant des paragraphes courts et des listes si nécessaire.
+        Appels à l'action (1-2 lignes) : Encourage les spectateurs à s'abonner, liker la vidéo, ou laisser un commentaire.
+        Liens utiles : Ajoute des liens vers les réseaux sociaux, le site web, ou d'autres vidéos pertinentes.
+        Mots-clés et hashtags : Inclus 3 à 5 mots-clés pertinents et 2 à 3 hashtags pour améliorer le référencement.
+
+        Retourne uniquement la description YouTube en FRANCAIS, sans commentaire supplémentaire.
         
         --- Transcription ---
         {video_transcript}
@@ -386,7 +415,7 @@ def generate_summary(video_transcript: str) -> str:
         response = client.chat.completions.create(
             model="gpt-4o-mini",  # Utilisation de GPT-4 si disponible
             messages=[
-                {"role": "system", "content": "Tu es un expert en résumé vidéo."},
+                {"role": "system", "content": "Tu es un expert en rédaction de descriptions YouTube."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.7,
@@ -411,19 +440,36 @@ def generate_personal_summary(video_transcript: str) -> str:
     try:
         # Créer le prompt pour générer un résumé à la première personne
         prompt = f"""
-        Voici la transcription d'une vidéo. Résume-la comme si la personne qui parle dans la vidéo se décrivait en première personne. 
-        Raconte ce qu'elle explique et ce qui se passe dans la vidéo, avec une narration à la première personne.
+        Tu es un assistant qui aide les créateurs de vidéos à se souvenir du contenu de leurs vidéos sans avoir à les revoir. 
+        Résume la transcription de cette vidéo en utilisant une narration à la première personne, comme si le créateur décrivait lui-même ce qu'il a expliqué dans la vidéo.
+        Règles pour le résumé :
+        Utilise un ton naturel et professionnel, comme si le créateur parlait directement à un collègue ou à un ami.
+        Structure le résumé en points clés, avec une phrase d'introduction et une conclusion.
+        Chaque point clé doit correspondre à une section ou une idée principale de la vidéo.
+        Inclus des détails spécifiques mentionnés dans la vidéo, comme des chiffres, des exemples, ou des citations importantes.
 
-        Transcription:
+        Le résumé doit tenir en 8 à 10 lignes maximum, tout en couvrant tous les points clés de la vidéo.
+
+        Exemple de résumé :
+        'Dans cette vidéo, j'explique comment optimiser une chaîne YouTube en 2024. 
+        Je commence par les 3 étapes clés pour augmenter l'engagement : 
+        1) créer des miniatures accrocheuses, 
+        2) utiliser des titres percutants, 
+        et 3) interagir avec les commentaires. 
+        Ensuite, je partage mes astuces pour monétiser une chaîne rapidement, en insistant sur l'importance de la régularité. 
+        Enfin, je donne des exemples concrets de créateurs qui ont réussi en appliquant ces méthodes.'
+
+        Transcription de la vidéo :
         {video_transcript}
 
-        Résumé à la première personne :
+        Retourne uniquement le résumé à la première personne, sans commentaire supplémentaire.
+        
         """
 
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "Tu es un expert en rédaction de résumés à la première personne."},
+                {"role": "system", "content": "Tu es un expert en rédaction de résumés"},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.7,
@@ -446,10 +492,24 @@ def generate_keywords(video_transcript: str) -> str:
     try:
         # Créer le prompt pour générer des mots-clés
         prompt = f"""
-        Voici la transcription d'une vidéo. Génère une liste de 5 à 10 mots-clés pertinents en FRANCAIS qui résument le contenu de cette vidéo.
+        Tu es un expert en référencement YouTube. 
+        Analyse la transcription de cette vidéo et génère une liste de mots-clés pertinents en FRANCAIS pour améliorer la visibilité de la vidéo sur YouTube.
+        Règles pour les mots-clés :
+        La liste doit inclure 5 à 10 mots-clés pertinents en FRANCAIS.
+        Inclus un mélange de mots-clés courts (1-2 mots) et d'expressions longues (3-5 mots).
+        Les mots-clés doivent être spécifiques au contenu de la vidéo, sans termes génériques ou vagues.
+        Les mots-clés doivent refléter les habitudes de recherche des utilisateurs sur YouTube.
 
-        --- Transcription ---
+        Exemples de mots-clés bien formatés :
+        Marketing digital
+        Stratégies de contenu
+        Tendances marketing 2024
+        Comment utiliser ChatGPT pour le marketing
+        
+        Transcription de la vidéo :
         {video_transcript}
+
+        Retourne uniquement une liste de mots-clés en FRANCAIS, séparés par des virgules, sans commentaire supplémentaire.
 
         Mots-clés :
         """
@@ -928,6 +988,21 @@ def generate_shorts():
         logger.error(error_msg)
         logger.exception(e)  # Ceci affichera le stack trace complet
         return jsonify({"error": error_msg}), 500
+    
+
+@app.route('/get-description', methods=['POST'])
+def get_description():
+    # Récupère la transcription de la vidéo (exemple)
+    video_transcript = request.form.get('video_transcript')
+
+    # Génère la description (exemple)
+    description = generate_youtube_description(video_transcript)  # Remplace par ta logique
+
+    # Remplace les sauts de ligne par <br>
+    description = description.replace("\n", "<br>")
+
+    # Retourne la description au frontend
+    return jsonify({"description": description})
     
 @app.route('/features')
 def features():
