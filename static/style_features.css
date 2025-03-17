@@ -107,14 +107,21 @@ main {
     width: 200px;
 }
 
-.dropdown-menu input {
-    width: 100%;
-    padding: 8px;
-    margin-bottom: 10px;
-    border: 1px solid #4a4a4a;
+.user-menu input {
+    width: 182px; /* Largeur fixe */
+    max-width: 100%; /* Ne dépasse pas la largeur du conteneur */
+    padding: 8px; /* Espacement intérieur */
+    margin-bottom: 10px; /* Espacement entre les champs */
+    border: 1px solid #3a3a3a;
     border-radius: 4px;
     background-color: #3a3a3a;
     color: white;
+    font-size: 14px; /* Taille de la police */
+}
+
+.user-menu input:focus {
+    outline: none; /* Supprime le bord blanc */
+    border: 2px solid #7c3aed;
 }
 
 .dropdown-menu button {
@@ -449,40 +456,61 @@ footer p {
 
 .downloads-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(2, 1fr); /* 2 cartes par ligne */
+    gap: 20px; /* Espace entre les cartes */
     padding: 20px;
 }
 
 .download-card {
     background-color: #2a2a2a;
-    border: 2px solid #7c3aed;
+    border: 2px solid transparent;
     border-radius: 10px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
     transition: all 0.3s ease;
+    height: 500px; /* Hauteur fixe */
+    width: auto; /* Largeur dynamique */
+    aspect-ratio: auto; /* Permet à la largeur de s'adapter au ratio de la vidéo */
 }
 
-.download-card:hover {
-    transform: scale(1.03);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+.download-card:hover{
+    border: 2px solid #7c3aed;
+    transition: all 0.3s ease;
+    transform: scale(1.02);
+    
 }
 
-.video-thumbnail img {
+.video-thumbnail {
+    display: flex;
+    justify-content: center;
+    align-items: center;
     width: 100%;
-    height: auto;
-    display: block;
+    height: calc(100% - 100px); /* Réserve de l'espace pour .video-info */
+    padding: 0; /* Supprime le padding */
+    margin: 0; /* Supprime la marge */
+}
+
+.video-thumbnail img,
+.video-thumbnail video {
+    width: 100%; /* Occupe toute la largeur du conteneur */
+    height: auto; /* Hauteur s'adapte au ratio */
+    max-height: 100%; /* Ne dépasse pas la hauteur du conteneur */
+    object-fit: contain; /* Remplit le conteneur sans espace */
+    padding: 0; /* Supprime le padding */
+    margin: 0; /* Supprime la marge */
 }
 
 .video-info {
-    padding: 15px;
+    padding: 10px 15px; /* Espace en dessous de la vidéo */
     text-align: center;
 }
 
 .video-title {
     font-size: 1.2rem;
     margin-bottom: 10px;
+    margin-top: 0px;
+    padding-top: 0px;
 }
 
 .download-btn {
@@ -499,7 +527,7 @@ footer p {
     background-color: #6d28d9;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1000px) {
     .downloads-grid {
         grid-template-columns: 1fr;
     }

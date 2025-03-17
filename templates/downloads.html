@@ -42,7 +42,24 @@
             <!-- Carte 1 -->
             <div class="download-card">
                 <div class="video-thumbnail">
-                    <img src="static/video-thumbnail-1.jpg" alt="Miniature de la vidéo 1">
+                    <Video controls>
+                        <source src="static/VideoTest.mp4" type="video/mp4">
+                    </Video>
+                </div>
+                <div class="video-info">
+                    <h3 class="video-title">Titre de la vidéo 1</h3>
+                    <button class="download-btn" onclick="downloadVideo('video1.mp4')">
+                        <i class="fas fa-download"></i> Télécharger
+                    </button>
+                </div>
+            </div>
+
+            <!-- Carte 1,5 -->
+            <div class="download-card">
+                <div class="video-thumbnail">
+                    <Video controls>
+                        <source src="static/VideoTest.mp4" type="video/mp4">
+                    </Video>
                 </div>
                 <div class="video-info">
                     <h3 class="video-title">Titre de la vidéo 1</h3>
@@ -55,7 +72,9 @@
             <!-- Carte 2 -->
             <div class="download-card">
                 <div class="video-thumbnail">
-                    <img src="static/video-thumbnail-2.jpg" alt="Miniature de la vidéo 2">
+                    <Video controls>
+                        <source src="static/ShortTest.mp4" type="video/mp4">
+                    </Video>
                 </div>
                 <div class="video-info">
                     <h3 class="video-title">Titre de la vidéo 2</h3>
