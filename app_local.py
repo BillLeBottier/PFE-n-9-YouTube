@@ -669,10 +669,11 @@ def clean_output_folder():
 
 
 
-def create_short(video_path: str, start_time: str, end_time: str, index: int, word_limit: int = None) -> str:
+def create_short(video_path: str, start_time: str, end_time: str, index: int, word_limit: int = None, language: str = "fr") -> str:
     """
     Crée un short au format vertical (1080x1920) sans bord noir et avec sous-titres adaptés.
     Permet de limiter le nombre de mots par ligne de sous-titre si word_limit est spécifié.
+    Utilise la langue spécifiée pour la transcription.
     """
     try:
         temp_short_path = os.path.join(OUTPUT_FOLDER, f"temp_short_{index + 1}.mp4")
@@ -724,7 +725,7 @@ def create_short(video_path: str, start_time: str, end_time: str, index: int, wo
             transcript = client.audio.transcriptions.create(
                 file=audio_file,
                 model="whisper-1",
-                language="fr",
+                language=language,
                 response_format="vtt"
             )
 
@@ -882,7 +883,8 @@ def upload_file():
         response_data = {
             "video_url": video_url,
             "vtt_url": vtt_url,
-            "original_filename": timestamped_filename  # Utiliser le nom avec timestamp
+            "original_filename": timestamped_filename,  # Utiliser le nom avec timestamp
+            "language": language  # Ajouter la langue sélectionnée dans la réponse
         }
 
         if create_chapters:
@@ -930,6 +932,9 @@ def generate_shorts():
         word_limit = request.form.get('word_limit')
         word_limit = int(word_limit) if word_limit and word_limit.strip().isdigit() and int(word_limit) > 0 else None
         
+        # Récupérer le paramètre language (même langue que celle choisie initialement)
+        language = request.form.get('language', 'fr')
+        
         # Logs de debugging
         logger.info(f"Paramètres reçus:")
         logger.info(f"- original_filename: {original_filename}")
@@ -937,6 +942,7 @@ def generate_shorts():
         logger.info(f"- shorts_count: {shorts_count}")
         logger.info(f"- shorts_duration: {shorts_duration}")
         logger.info(f"- word_limit: {word_limit}")
+        logger.info(f"- language: {language}")
 
         # Construire le chemin complet
         original_video_path = os.path.join(TEMP_FOLDER, original_filename)
@@ -971,7 +977,8 @@ def generate_shorts():
                 segment['start'],
                 segment['end'],
                 i,
-                word_limit=word_limit
+                word_limit=word_limit,
+                language=language
             )
             logger.info(f"Short créé: {output_filename}")
             
@@ -1002,7 +1009,40 @@ def features():
 @app.route('/downloads')
 def downloads():
     """ Page des téléchargements où l'utilisateur voit ses vidéos générées """
-    return render_template('downloads.html')
+    files = []
+    
+    # Vérifier si le dossier outputs existe
+    if os.path.exists(OUTPUT_FOLDER):
+        # Récupérer tous les fichiers MP4 (vidéos et shorts)
+        mp4_files = [f for f in os.listdir(OUTPUT_FOLDER) if f.endswith('.mp4')]
+        
+        # Créer une liste d'objets contenant les informations sur chaque fichier
+        for file in mp4_files:
+            file_path = os.path.join(OUTPUT_FOLDER, file)
+            url = url_for('serve_file', filename=file)
+            
+            # Détermine s'il s'agit d'un short ou d'une vidéo complète
+            is_short = file.startswith('short_')
+            
+            # Obtenir la date de création du fichier
+            creation_time = os.path.getctime(file_path)
+            creation_date = datetime.fromtimestamp(creation_time).strftime('%d/%m/%Y %H:%M')
+            
+            # Obtenir la taille du fichier en Mo
+            size_mb = round(os.path.getsize(file_path) / (1024 * 1024), 2)
+            
+            files.append({
+                'name': file,
+                'url': url,
+                'is_short': is_short,
+                'date': creation_date,
+                'size': size_mb
+            })
+        
+        # Trier les fichiers par date de création (les plus récents d'abord)
+        files.sort(key=lambda x: x['date'], reverse=True)
+    
+    return render_template('downloads.html', files=files)
 
 @app.route('/generate_zip', methods=['POST'])
 def generate_zip():
