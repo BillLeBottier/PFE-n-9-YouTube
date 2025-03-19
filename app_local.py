@@ -448,6 +448,8 @@ def generate_personal_summary(video_transcript: str) -> str:
         Structure le résumé en points clés, avec une phrase d'introduction et une conclusion.
         Chaque point clé doit correspondre à une section ou une idée principale de la vidéo.
         Inclus des détails spécifiques mentionnés dans la vidéo, comme des chiffres, des exemples, ou des citations importantes.
+        
+        Fait des sauts à la ligne inteligent et que tu codera par <br>
 
        
 
