@@ -502,7 +502,9 @@
                         // Extraire le nom du fichier avec timestamp de l'URL vidéo
                         const videoFilename = response.video_url.split('/').pop().replace('_subtitled.mp4', '.mp4');
                         console.log("Nom du fichier pour les shorts:", videoFilename);
-                        generateShorts(videoFilename, response.vtt_url);
+                        console.log("Langue utilisée pour les sous-titres:", response.language);
+                        // Passer la langue récupérée du serveur à la fonction de génération de shorts
+                        generateShorts(videoFilename, response.vtt_url, response.language);
                     }
                     
                     // Afficher les données reçues pour le débogage
@@ -661,7 +663,7 @@
         };
     }
 
-    function generateShorts(originalVideoFilename, vttUrl) {
+    function generateShorts(originalVideoFilename, vttUrl, language) {
         const formData = new FormData();
         formData.append('original_video_filename', originalVideoFilename);
         formData.append('vtt_path', vttUrl);
@@ -669,6 +671,9 @@
         formData.append('shorts_count', document.getElementById('shortsCount').value);
         formData.append('shorts_duration', document.getElementById('shortsDuration').value);
         formData.append('style', currentSelectedStyle);
+        
+        // Utiliser la langue passée en paramètre (celle utilisée pour la transcription initiale)
+        formData.append('language', language);
         
         // Ajouter le paramètre word_limit
         const shortsWordLimit = document.getElementById('shortsWordLimit').value;
@@ -681,7 +686,8 @@
             vttUrl,
             shortsCount: document.getElementById('shortsCount').value,
             shortsDuration: document.getElementById('shortsDuration').value,
-            wordLimit: shortsWordLimit
+            wordLimit: shortsWordLimit,
+            language: language
         });
 
         fetch('/generate_shorts', {

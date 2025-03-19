@@ -8,6 +8,108 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style_features.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            margin: 40px auto;
+            max-width: 600px;
+        }
+        
+        .empty-state i {
+            font-size: 60px;
+            color: #ccc;
+            margin-bottom: 20px;
+        }
+        
+        .empty-state h2 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .empty-state p {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .action-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #7c3aed;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+        
+        .action-btn:hover {
+            background-color: #6d28d9;
+        }
+        
+        .video-title {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 90%;
+            margin-bottom: 10px;
+        }
+        
+        .video-meta {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        .downloads-title {
+            margin: 30px 0 20px;
+            padding-left: 20px;
+            color: #333;
+            position: relative;
+        }
+        
+        .downloads-title::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 5px;
+            height: 24px;
+            background-color: #7c3aed;
+            border-radius: 2px;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 20px;
+            padding: 0 20px;
+        }
+        
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+            color: #6b7280;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            border-bottom-color: #7c3aed;
+            color: #7c3aed;
+        }
+        
+        .tab:hover:not(.active) {
+            border-bottom-color: #d1d5db;
+            color: #4b5563;
+        }
+    </style>
 </head>
 <body>
     <div class="header">
@@ -38,54 +140,45 @@
     </div>
 
     <main>
-        <div class="downloads-grid">
-            <!-- Carte 1 -->
-            <div class="download-card">
-                <div class="video-thumbnail">
-                    <Video controls>
-                        <source src="static/VideoTest.mp4" type="video/mp4">
-                    </Video>
-                </div>
-                <div class="video-info">
-                    <h3 class="video-title">Titre de la vidéo 1</h3>
-                    <button class="download-btn" onclick="downloadVideo('video1.mp4')">
-                        <i class="fas fa-download"></i> Télécharger
-                    </button>
-                </div>
-            </div>
-
-            <!-- Carte 1,5 -->
-            <div class="download-card">
-                <div class="video-thumbnail">
-                    <Video controls>
-                        <source src="static/VideoTest.mp4" type="video/mp4">
-                    </Video>
-                </div>
-                <div class="video-info">
-                    <h3 class="video-title">Titre de la vidéo 1</h3>
-                    <button class="download-btn" onclick="downloadVideo('video1.mp4')">
-                        <i class="fas fa-download"></i> Télécharger
-                    </button>
-                </div>
-            </div>
-    
-            <!-- Carte 2 -->
-            <div class="download-card">
-                <div class="video-thumbnail">
-                    <Video controls>
-                        <source src="static/ShortTest.mp4" type="video/mp4">
-                    </Video>
-                </div>
-                <div class="video-info">
-                    <h3 class="video-title">Titre de la vidéo 2</h3>
-                    <button class="download-btn" onclick="downloadVideo('video2.mp4')">
-                        <i class="fas fa-download"></i> Télécharger
-                    </button>
-                </div>
-            </div>
-    
-            <!-- Ajoute d'autres cartes ici -->
+        <h1 class="downloads-title">Vos vidéos</h1>
+        
+        <div class="tabs">
+            <div class="tab active" data-filter="all">Toutes les vidéos</div>
+            <div class="tab" data-filter="videos">Vidéos complètes</div>
+            <div class="tab" data-filter="shorts">Shorts</div>
         </div>
+        
+        {% if files %}
+            <div class="downloads-grid">
+                {% for file in files %}
+                    <div class="download-card {% if file.is_short %}short{% else %}video{% endif %}">
+                        <div class="video-thumbnail">
+                            <video controls>
+                                <source src="{{ file.url }}" type="video/mp4">
+                            </video>
+                        </div>
+                        <div class="video-info">
+                            <h3 class="video-title">{{ file.name }}</h3>
+                            <div class="video-meta">
+                                <span><i class="far fa-calendar-alt"></i> {{ file.date }}</span>
+                                <span><i class="fas fa-file-video"></i> {{ file.size }} Mo</span>
+                                <span><i class="fas {% if file.is_short %}fa-mobile-alt{% else %}fa-desktop{% endif %}"></i> {% if file.is_short %}Short{% else %}Vidéo complète{% endif %}</span>
+                            </div>
+                            <a href="{{ file.url }}" download class="download-btn">
+                                <i class="fas fa-download"></i> Télécharger
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-file-video"></i>
+                <h2>Aucune vidéo disponible</h2>
+                <p>Vous n'avez pas encore généré de vidéos sous-titrées. Retournez à la page d'accueil pour commencer.</p>
+                <a href="{{ url_for('index') }}" class="action-btn">Générer une vidéo</a>
+            </div>
+        {% endif %}
     </main>
 
     <script>
@@ -98,20 +191,70 @@
             // Logique de connexion
             alert('Fonctionnalité de connexion à implémenter');
         }
-
-        function startProcess() {
-            // Désactiver le bouton START et ajouter l'animation
-            const startButton = document.querySelector('.start-btn');
-            startButton.classList.add('processing');
-            startButton.disabled = true;
+        
+        // Filtrage des vidéos
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabs = document.querySelectorAll('.tab');
             
-            // Rediriger vers la page d'accueil pour commencer le processus
-            setTimeout(function() {
-                window.location.href = "{{ url_for('index') }}";
-            }, 1000); // Délai d'une seconde pour montrer l'animation
-        }
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Changer l'onglet actif
+                    document.querySelector('.tab.active').classList.remove('active');
+                    this.classList.add('active');
+                    
+                    // Filtrer les vidéos
+                    const filter = this.getAttribute('data-filter');
+                    const cards = document.querySelectorAll('.download-card');
+                    
+                    cards.forEach(card => {
+                        if (filter === 'all') {
+                            card.style.display = 'block';
+                        } else if (filter === 'videos' && !card.classList.contains('short')) {
+                            card.style.display = 'block';
+                        } else if (filter === 'shorts' && card.classList.contains('short')) {
+                            card.style.display = 'block';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                });
+            });
+            
+            // Rafraîchissement automatique de la page
+            function refreshPage() {
+                // Vérifier s'il y a des vidéos en cours de génération
+                fetch('/status')
+                    .then(response => response.json())
+                    .then(data => {
+                        // Si un traitement est en cours (statut entre 1 et 99), rafraîchir
+                        if (data.progress > 0 && data.progress < 100) {
+                            console.log('Traitement en cours, rafraîchissement dans 5 secondes...');
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 5000); // Rafraîchir toutes les 5 secondes
+                        } else {
+                            // Sinon, vérifier de nouveau après 15 secondes
+                            setTimeout(refreshPage, 15000);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erreur lors de la vérification du statut:', error);
+                        setTimeout(refreshPage, 30000); // En cas d'erreur, attendre 30 secondes
+                    });
+            }
+            
+            // Démarrer le cycle de rafraîchissement
+            setTimeout(refreshPage, 5000);
+        });
+        
+        // Fermer le menu si on clique ailleurs
+        document.addEventListener('click', function(e) {
+            const dropdownMenu = document.getElementById('dropdownMenu');
+            const userIcon = document.querySelector('.user-icon');
+            if (!userIcon.contains(e.target)) {
+                dropdownMenu.style.display = 'none';
+            }
+        });
     </script>
-    
-    
 </body>
 </html>
