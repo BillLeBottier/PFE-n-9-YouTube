@@ -835,19 +835,22 @@
                 console.error("Erreur d'envoi du token :", error);
             });
         }
+
         function toggleUserMenu() {
-        const dropdownMenu = document.getElementById('dropdownMenu');
-        dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
+            const dropdownMenu = document.getElementById('dropdownMenu');
+            dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
         }
 
         // Fermer le menu si on clique ailleurs
-        document.addEventListener('click', function(e) {
-            const dropdownMenu = document.getElementById('dropdownMenu');
-            const userIcon = document.querySelector('.user-icon');
-            if (!userIcon.contains(e.target)) {
-                dropdownMenu.style.display = 'none';
-            }
-        });
+document.addEventListener('click', function(e) {
+    const dropdownMenu = document.getElementById('dropdownMenu');
+    const userIcon = document.querySelector('.user-icon'); 
+
+    // Si on clique en dehors du menu ET en dehors de l'icône utilisateur, on cache le menu
+    if (!dropdownMenu.contains(e.target) && !userIcon.contains(e.target)) {
+        dropdownMenu.style.display = 'none';
+    }
+});
     </script>
     
     <!-- Bouton START en bas de page -->

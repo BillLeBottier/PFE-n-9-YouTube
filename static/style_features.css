@@ -107,6 +107,16 @@ main {
     width: 200px;
 }
 
+.dropdown-menu input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #4a4a4a;
+    border-radius: 4px;
+    background-color: #3a3a3a;
+    color: white;
+}
+
 .user-menu input {
     width: 182px; /* Largeur fixe */
     max-width: 100%; /* Ne dépasse pas la largeur du conteneur */
