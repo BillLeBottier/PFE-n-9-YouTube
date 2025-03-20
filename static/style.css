@@ -98,84 +98,89 @@ html, body {
 /* Menu utilisateur */
 .user-menu {
     position: relative;
+    margin-left: 20px;
 }
 
 .user-icon {
-    font-size: 24px;
-    cursor: pointer;
-    padding: 8px;
+    width: 40px;
+    height: 40px;
+    background-color: var(--color-accent-900);
     border-radius: 50%;
-    transition: background-color 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 24px;
+    color: white;
 }
 
 .user-icon:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--color-accent-800);
 }
-
-.dropdown-menu input {
-    width: 100%;
-    padding: 8px;
-    margin-bottom: 10px;
-    border: 1px solid #4a4a4a;
-    border-radius: 4px;
-    background-color: #3a3a3a;
-    color: white;
-}
-
-.user-menu input {
-    width: 182px;
-    max-width: 182px; /* Ne dépasse pas la largeur du conteneur */
-    padding: 8px; /* Espacement intérieur */
-    margin-bottom: 10px; /* Espacement entre les champs */
-    border: 1px solid #3a3a3a;
-    border-radius: 4px;
-    background-color: #3a3a3a;
-    color: white;
-    font-size: 14px; /* Taille de la police */
-}
-
-.user-menu input:focus {
-    outline: none; /* Supprime le bord blanc */
-    border: 2px solid #7c3aed;
-}
-
 
 .dropdown-menu {
     display: none;
     position: absolute;
-    top: 100%;
+    top: 50px;
     right: 0;
     background-color: #2a2a2a;
-    border-radius: 8px;
-    padding: 16px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-    width: 200px;
+    border-radius: 10px;
+    padding: 15px;
+    min-width: 250px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+    z-index: 100;
 }
 
-.dropdown-menu input {
+.user-menu input {
+    display: block;
     width: 100%;
-    padding: 8px;
     margin-bottom: 10px;
-    border: 1px solid #4a4a4a;
-    border-radius: 4px;
-    background-color: #3a3a3a;
-    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #444;
+    background-color: #333;
+    color: #ffffff;
+    outline: none;
+    transition: border-color 0.3s;
 }
 
-.dropdown-menu button {
+.user-menu input:focus {
+    border-color: #7c3aed;
+}
+
+.user-menu button {
     width: 100%;
-    padding: 8px;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
     background-color: #7c3aed;
     color: white;
     border: none;
-    border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.3s;
 }
 
-.dropdown-menu button:hover {
-    background-color: #9461ff;
+.user-menu button:hover {
+    background-color: #6929c4;
+}
+
+.user-info {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #444;
+    text-align: center;
+}
+
+.user-email {
+    font-size: 0.9em;
+    color: var(--color-text-secondary);
+    margin-top: 5px;
+}
+
+#signupForm {
+    border-top: 1px solid var(--color-border);
+    padding-top: 15px;
+    margin-top: 10px;
 }
 
 /* Bouton Commencer */
