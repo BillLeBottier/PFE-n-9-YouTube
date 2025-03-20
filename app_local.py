@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_from_directory, url_for, jsonify
+from flask import Flask, render_template, request, send_from_directory, url_for, jsonify, session, redirect, flash
 from werkzeug.utils import secure_filename
 import os
 import openai
@@ -11,6 +11,8 @@ from typing import List, Dict
 import shutil
 import webvtt
 import re
+import requests
+from functools import wraps
 
 #import pour le fichier zipcr
 import io
@@ -43,15 +45,39 @@ ALLOWED_EXTENSIONS = {'mp4', 'avi', 'mov', 'mkv'}
 MAX_CONTENT_LENGTH = 1024 * 1024 * 1024  # 1gb max
 app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
 
+# Configuration de la clé secrète pour les sessions
+app.secret_key = os.getenv('FLASK_SECRET_KEY', 'dev-secret-key-change-in-production')
+
+# Configuration Firebase
+FIREBASE_API_KEY = os.getenv('FIREBASE_API_KEY', 'AIzaSyDDVjaqp5RpQzDfoSayfvhW7LhTfW2i3mI')
+FIREBASE_AUTH_DOMAIN = os.getenv('FIREBASE_AUTH_DOMAIN', 'steam-hour-453716-a4.firebaseapp.com')
+FIREBASE_PROJECT_ID = os.getenv('FIREBASE_PROJECT_ID', 'steam-hour-453716-a4')
+
+# URL pour vérifier les tokens Firebase
+FIREBASE_ID_TOKEN_VERIFY_URL = f"https://identitytoolkit.googleapis.com/v1/accounts:lookup?key={FIREBASE_API_KEY}"
+
 # Configuration OpenAI
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 if not OPENAI_API_KEY:
     raise ValueError("OPENAI_API_KEY n'est pas définie dans le fichier .env")
 openai.api_key = OPENAI_API_KEY
 
-
 # Variable pour le suivi du statut
 process_status = {"progress": 0}
+
+# Fonction pour vérifier si l'utilisateur est connecté
+def is_logged_in():
+    return 'user_id' in session and 'email' in session
+
+# Décorateur pour protéger les routes qui nécessitent une authentification
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not is_logged_in():
+            flash('Veuillez vous connecter pour accéder à cette page.', 'warning')
+            return redirect(url_for('index'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -780,9 +806,14 @@ def create_short(video_path: str, start_time: str, end_time: str, index: int, wo
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    """Page d'accueil"""
+    return render_template('index.html', 
+                          user=session.get('email'),
+                          is_logged_in=is_logged_in(),
+                          display_name=session.get('display_name', ''))
 
 @app.route('/upload', methods=['POST'])
+@login_required
 def upload_file():
     global process_status
     process_status = {"progress": 0}
@@ -922,6 +953,7 @@ def get_status():
     return jsonify(process_status)
 
 @app.route('/generate_shorts', methods=['POST'])
+@login_required
 def generate_shorts():
     try:
         # Récupérer les paramètres
@@ -1005,12 +1037,16 @@ def generate_shorts():
 
 @app.route('/features')
 def features():
-    """ Page des fonctionnalités de l'application """
-    return render_template('features.html')
- 
+    """Page des fonctionnalités"""
+    return render_template('features.html',
+                          user=session.get('email'),
+                          is_logged_in=is_logged_in(),
+                          display_name=session.get('display_name', ''))
+
 @app.route('/downloads')
+@login_required
 def downloads():
-    """ Page des téléchargements où l'utilisateur voit ses vidéos générées """
+    """Page des téléchargements où l'utilisateur voit ses vidéos générées"""
     files = []
     
     # Vérifier si le dossier outputs existe
@@ -1044,7 +1080,11 @@ def downloads():
         # Trier les fichiers par date de création (les plus récents d'abord)
         files.sort(key=lambda x: x['date'], reverse=True)
     
-    return render_template('downloads.html', files=files)
+    return render_template('downloads.html', 
+                          files=files,
+                          user=session.get('email'),
+                          is_logged_in=is_logged_in(),
+                          display_name=session.get('display_name', ''))
 
 @app.route('/generate_zip', methods=['POST'])
 def generate_zip():
@@ -1098,6 +1138,132 @@ def generate_zip():
         download_name=zip_filename
     )
 
+# Fonction pour vérifier un token Firebase
+def verify_firebase_token(id_token):
+    try:
+        # Vérification du token via l'API Firebase
+        logger.info("Envoi de la requête à l'API Firebase pour vérification du token")
+        payload = {
+            'idToken': id_token
+        }
+        response = requests.post(FIREBASE_ID_TOKEN_VERIFY_URL, json=payload)
+        logger.info(f"Réponse de l'API Firebase: Status {response.status_code}")
+        
+        if response.status_code != 200:
+            logger.error(f"Erreur de l'API Firebase: {response.text}")
+            return None
+            
+        data = response.json()
+        
+        # Vérifier si la réponse contient des informations utilisateur
+        if 'users' in data and len(data['users']) > 0:
+            user_info = data['users'][0]
+            logger.info(f"Informations utilisateur récupérées pour: {user_info.get('email')}")
+            return user_info
+        else:
+            logger.error(f"Erreur de vérification du token, aucun utilisateur trouvé: {data}")
+            return None
+    except Exception as e:
+        logger.error(f"Exception lors de la vérification du token: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return None
+
+# Routes d'authentification
+@app.route('/verify-token', methods=['POST'])
+def verify_token():
+    """Vérifier le token Firebase envoyé par le client et créer une session utilisateur"""
+    try:
+        # Récupérer le token depuis la requête
+        logger.info("Requête de vérification de token reçue")
+        request_data = request.get_json()
+        id_token = request_data.get('idToken')
+        
+        if not id_token:
+            logger.error("Token manquant dans la requête")
+            return jsonify({'error': 'Token manquant'}), 400
+        
+        logger.info(f"Tentative de vérification du token: {id_token[:10]}...")
+        
+        # Vérifier le token avec Firebase
+        user_info = verify_firebase_token(id_token)
+        
+        if user_info:
+            logger.info(f"Token valide pour: {user_info.get('email')}")
+            # Créer une session utilisateur
+            session['user_id'] = user_info.get('localId')
+            session['email'] = user_info.get('email')
+            session['display_name'] = user_info.get('displayName', 'Utilisateur')
+            
+            logger.info(f"Session créée pour: {session['email']}")
+            
+            return jsonify({
+                'success': True,
+                'message': 'Authentification réussie',
+                'user': {
+                    'email': user_info.get('email'),
+                    'displayName': user_info.get('displayName', 'Utilisateur')
+                }
+            })
+        else:
+            logger.error("Échec de vérification du token Firebase")
+            return jsonify({'error': 'Token invalide'}), 401
+    
+    except Exception as e:
+        logger.error(f"Erreur lors de la vérification du token: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/logout')
+def logout():
+    """Déconnecter l'utilisateur en supprimant sa session"""
+    session.clear()
+    flash('Vous avez été déconnecté avec succès', 'success')
+    return redirect(url_for('index'))
+
+@app.route('/signup', methods=['POST'])
+def signup():
+    """API pour s'inscrire (création d'un compte Firebase depuis le backend)"""
+    try:
+        # Récupérer les données depuis la requête
+        request_data = request.get_json()
+        email = request_data.get('email')
+        password = request_data.get('password')
+        
+        if not email or not password:
+            return jsonify({'error': 'Email et mot de passe requis'}), 400
+        
+        # URL pour créer un utilisateur Firebase
+        signup_url = f"https://identitytoolkit.googleapis.com/v1/accounts:signUp?key={FIREBASE_API_KEY}"
+        
+        # Envoi de la requête à Firebase
+        response = requests.post(signup_url, json={
+            'email': email,
+            'password': password,
+            'returnSecureToken': True
+        })
+        
+        data = response.json()
+        
+        if 'error' in data:
+            return jsonify({'error': data['error']['message']}), 400
+        
+        # L'inscription a réussi, connecter automatiquement l'utilisateur
+        session['user_id'] = data.get('localId')
+        session['email'] = data.get('email')
+        
+        return jsonify({
+            'success': True,
+            'message': 'Inscription réussie',
+            'user': {
+                'email': data.get('email')
+            }
+        })
+    
+    except Exception as e:
+        logger.error(f"Erreur lors de l'inscription: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

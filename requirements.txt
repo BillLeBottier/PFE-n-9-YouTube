@@ -17,3 +17,7 @@ colorama>=0.4.6
 google-cloud-storage==2.13.0
 google-cloud-secret-manager==2.16.4
 webvtt-py==0.5.1
+flask-login>=0.6.2
+flask-sqlalchemy>=3.0.5
+flask-wtf>=1.1.1
+email-validator>=2.0.0
